@@ -1,6 +1,7 @@
 
 
-export const ROOT_URL = "http://192.168.0.113:8000"
+// export const ROOT_URL = "http://192.168.0.115:8000"
+export const ROOT_URL = "https://kondatemaker.mydns.jp/api"
 
 export const WEEK_SUNDAY = 1
 export const WEEK_MONDAY = 2
