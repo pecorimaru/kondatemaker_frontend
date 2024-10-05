@@ -78,7 +78,7 @@ export const InputIngred = ({ isInputIngredOpen, setIsInputIngredOpen, handleClo
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm text-gray-700">食材名:</label>
+            <label className="block text-sm text-gray-700">テスト食材名:</label>
             <input
               type="text"
               value={ingredNm}
