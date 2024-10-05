@@ -25,4 +25,4 @@ jobs:
       - name: Deploy to Server
         run: |
           # ここにデプロイのコマンドを追加
-          ssh pecorimaru@kondatemaker.mydns.jp "cd /develop/kondatemaker/ && git pull origin main"
+          ssh pecorimaru@kondatemaker.mydns.jp "cd /develop/kondatemaker/frontend/ && git pull origin main"
