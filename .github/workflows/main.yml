@@ -22,6 +22,17 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'  # 使用する Node.js のバージョン
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the project
+        run: npm run build  # プロジェクトのビルドコマンド
+
       - name: Deploy to Server
         run: |
           # ここにデプロイのコマンドを追加
