@@ -12,17 +12,16 @@ export const Home = () => {
   const {
     menuPlanNm,
     menuPlanNmStat,
-    selectedPlan, 
     setSelectedPlan, 
   } = useKondateMaker();
   
 
   useEffect(() => {
     console.log(`menuPlanNmStat isLoading:${menuPlanNmStat?.isLoading}`)
-    if (!selectedPlan && menuPlanNm) {
+    if (menuPlanNm) {
       setSelectedPlan(menuPlanNm)
     }
-  }, [menuPlanNm]); 
+  }, [menuPlanNm, menuPlanNmStat?.isLoading, setSelectedPlan]); 
 
   return(
     <div className="flex items-center justify-center h-screen w-full text-sm" style={{height: "calc(100vh - 80px)"}}>

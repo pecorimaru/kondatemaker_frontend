@@ -15,16 +15,16 @@ export const InputIngred = ({ isInputIngredOpen, setIsInputIngredOpen, handleClo
   const { initItemsForIngred, initItemsForIngredStat } = useInitItemsForIngred(ingredNm, user.id);
 
   useEffect(() => {
-    if(!unitListStat.isLoading) {
+    if(!unitListStat?.isLoading) {
       setUnitNm(unitList[0]?.unitNm);
     }
-  }, [unitList]);
+  }, [unitList, unitListStat?.isLoading]);
 
   useEffect(() => {
-    if(!salesAreaListStat.isLoading) {
+    if(!salesAreaListStat?.isLoading) {
       setSalesAreaNm(salesAreaList[0]?.nm);
     }
-  }, [salesAreaList]);
+  }, [salesAreaList, salesAreaListStat?.isLoading]);
 
   useEffect(() => {
     if(!initItemsForIngredStat.isLoading) {
@@ -36,7 +36,7 @@ export const InputIngred = ({ isInputIngredOpen, setIsInputIngredOpen, handleClo
         setSalesAreaNm(initItemsForIngred?.salesAreaNm);
       }
     }
-  }, [initItemsForIngredStat]);
+  }, [initItemsForIngred, initItemsForIngredStat]);
 
 
 
@@ -78,7 +78,7 @@ export const InputIngred = ({ isInputIngredOpen, setIsInputIngredOpen, handleClo
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm text-gray-700">テスト食材名:</label>
+            <label className="block text-sm text-gray-700">食材名:</label>
             <input
               type="text"
               value={ingredNm}

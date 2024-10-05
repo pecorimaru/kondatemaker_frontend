@@ -1,6 +1,3 @@
-import { useToweekRecipes } from "../hooks/useGlobal";
-import { useKondateMaker } from "./global";
-import * as Const from '../constants/constants.js';
 
 export const FooterButton = ({ text, icon, onClick }) => {
 

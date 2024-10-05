@@ -2,13 +2,12 @@ import '../css/styles.css';
 import '../css/output.css';
 import * as Const from '../constants/constants.js';
 import { useNavigate } from 'react-router-dom';
-import { BasicButton} from './common';
 import { useEffect, useState } from 'react';
 import { useKondateMaker } from './global';
 
 export const Login = () => {
 
-  const {user, setUser} = useKondateMaker();
+  const { setUser } = useKondateMaker();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null); // エラー状態
@@ -93,8 +92,10 @@ export const Login = () => {
           </div>
         </form>
         <div className="text-sm text-center">
-          <a href="#" className="text-blue-500 hover:underline">パスワードを忘れた場合</a>
+          {/* <a href="#" className="text-blue-500 hover:underline">パスワードを忘れた場合</a> */}
+          <p className="text-blue-500 hover:underline">パスワードを忘れた場合</p>
         </div>
+        {loading && <p className="text-blue-500">{loading}</p>}
         {error && <p className="text-red-500">{error}</p>}
         {message && <p className="text-green-500">{message}</p>}
       </div>

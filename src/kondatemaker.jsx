@@ -1,6 +1,5 @@
 import './css/styles.css';
 import './css/output.css';
-import { useState } from 'react';
 import { Footer, MemoizedHeader } from './components/global';
 import { Home } from './components/home';
 import { BuyList } from './components/buylist';

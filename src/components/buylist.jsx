@@ -40,12 +40,9 @@ export const BuyList = () => {
         }))
       )
 
-      console.log(incompleteRows)
-      console.log(completeRows)
-
     }
 
-  }, [buyIngreds]);
+  }, [buyIngreds, buyIngredsStat.isLoading]);
 
   const handleCheckboxChange = (index, isChecked) => {
 
