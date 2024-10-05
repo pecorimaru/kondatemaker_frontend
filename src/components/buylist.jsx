@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { InputIngred } from './inputingred';
 import { useKondateMaker } from './global';
 import { switchCompletionState } from '../requests/requests';
-import { useBuyIngreds } from '../hooks/useGlobal';
+import { useBuyIngreds } from '../hooks/useglobal';
 
 export const BuyList = () => {
 

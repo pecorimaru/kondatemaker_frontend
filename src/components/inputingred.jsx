@@ -1,6 +1,6 @@
 import * as Const from '../constants/constants.js';
 import React, { useEffect, useState } from "react";
-import { useInitItemsForIngred, useSalesAreaList, useUnitList } from "../hooks/useGlobal";
+import { useInitItemsForIngred, useSalesAreaList, useUnitList } from "../hooks/useglobal";
 import { useKondateMaker } from "./global";
 
 export const InputIngred = ({ isInputIngredOpen, setIsInputIngredOpen, handleCloseInputIngred, onSubmit }) => {

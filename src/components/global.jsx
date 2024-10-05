@@ -1,6 +1,6 @@
 import '../css/styles.css';
 import '../css/output.css';
-import { useMenuPlanNm, useMenuPlanList, useToweekRecipes } from '../hooks/useGlobal.js';
+import { useMenuPlanNm, useMenuPlanList, useToweekRecipes } from '../hooks/useglobal.js';
 import { useNavigate } from 'react-router-dom';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { FooterButton } from './common';

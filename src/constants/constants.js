@@ -1,7 +1,8 @@
 
 
 // export const ROOT_URL = "http://localhost:8000/api"
-export const ROOT_URL = "https://kondatemaker.mydns.jp/api"
+// export const ROOT_URL = "https://kondatemaker.mydns.jp/api"
+export const ROOT_URL = "/api"
 
 export const WEEK_SUNDAY = 1
 export const WEEK_MONDAY = 2
