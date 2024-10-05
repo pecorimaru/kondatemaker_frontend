@@ -22,6 +22,7 @@ export const  KondateMaker = () => {
 
   return (
     <>
+      <h1>test</h1>
       <div className="bg-slate-200 h-screen font-sans">
         <Router>
           <Routes>
