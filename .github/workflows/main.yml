@@ -1,0 +1,28 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main  # メインブランチにプッシュされたときにトリガー
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # セルフホステッドランナーを使用
+    steps:
+
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
+        run: |
+          ssh-keyscan -H kondatemaker.mydns.jp >> ~/.ssh/known_hosts
+
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Server
+        run: |
+          # ここにデプロイのコマンドを追加
+          ssh pecorimaru@kondatemaker.mydns.jp "cd /develop/kondatemaker/ && git pull origin main"
