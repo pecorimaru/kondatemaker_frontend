@@ -13,43 +13,22 @@ export const FooterButton = ({ text, icon, onClick }) => {
   );
 }
 
-export const BasicButton = ({ text, icon, onClick }) => {
 
+export const LoadingSpinner = () => {
   return (
-    <>
-      <button 
-        className={`${icon} bg-blue-400 text-white font-bold py-2 px-6 rounded-md shadow-md border-b-4 border-blue-500 hover:bg-blue-400 hover:shadow-lg active:bg-blue-400 active:shadow-sm active:border-opacity-0 active:translate-y-1 transition duration-100`}
-        onClick={onClick}
-      >
-        {text}
-      </button>
-    </>
+    // <div className="flex justify-center items-center fixed top-0 left-0 w-full h-full bg-white bg-opacity-80 z-50">
+    //   <div className="loader border-8 border-t-8 border-blue-500 border-opacity-10 rounded-full w-16 h-16 animate-spin"></div>  
+    <div className="flex justify-center items-center">
+      <div className="loader border-4 border-t-slate-500 border-gray-200 rounded-full w-5 h-5 animate-spin"></div>
+    </div>
   );
-}
-
-export const MainLabel = ({ textColor, bgColor, text}) => {
-  const baseClass = "px-4 py-2 font-bold text-center shadow-lg w-28";
-  return (
-    <td className={`${baseClass} ${textColor} ${bgColor}`}>{text}</td>
-  );
-}
-
-export const MainRecipe = ({text}) => {
-  return (
-    <td className="bg-white px-4 py-2 font-bold text-center shadow-md w-44">{text}</td>
-  );
-}
+};
 
 
 
 
 
 
-export const MainComboBox = ({text}) => {
-  return (
-    <td className="bg-white px-4 py-2 font-bold text-center shadow-md w-44">{text}</td>
-  );
-}
 
 
 

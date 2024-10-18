@@ -2,12 +2,22 @@
 module.exports = {
   content: [
     "./src/*.{html,js,jsx}",
-    "./src/components/*.{html,js,jsx}"
+    "./src/components/*.{html,js,jsx}",
+    "./src/components/*/*.{html,js,jsx}"
   ],
   theme: {
-    extend: {},
+    extend: {
+      width: {
+        '53': '13.25rem', // カスタムの幅を追加（56: 14rem, 60: 15remの中間）
+      },
+      userSelect: {
+        none: 'none',
+      },
+    }
   },
-  plugins: [],
+  variants: {
+    userSelect: ['responsive', 'hover', 'focus'],
+  },
   purge: {
     options: {
       safelist: [

@@ -1,17 +1,22 @@
 import React from 'react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { createRoot } from 'react-dom/client';
-import './css/index.css';
-import { KondateMaker } from './kondatemaker';
 import reportWebVitals from './reportWebVitals';
+
+import './css/index.css';
+
+import { KondateMaker } from './kondatemaker';
 import { KondateMakerProvider } from './components/global';
 
 const rootElement = document.getElementById("root");
 const root = createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <KondateMakerProvider>
-      <KondateMaker />
-    </KondateMakerProvider>
+    <GoogleOAuthProvider clientId="160003454125-03dkjca5khvs730fqfkmiguatdm8it58.apps.googleusercontent.com">
+      <KondateMakerProvider>
+        <KondateMaker />
+      </KondateMakerProvider>
+    </GoogleOAuthProvider>      
   </React.StrictMode>
 );
 

@@ -1,10 +1,11 @@
 import '../css/styles.css';
 import '../css/output.css';
+
 import { useEffect, useState } from 'react';
-// import { DayRecipeRow, MainLabel, MainRecipe } from './common';
 import { useKondateMaker } from './global.jsx';
 import * as Const from '../constants/constants.js';
 import { refreshToweekPlan } from '../requests/requests.js';
+import { LoadingSpinner } from './common.jsx';
 
 
 export const Home = () => {
@@ -85,7 +86,7 @@ const ToweekMenuPlanRow = () => {
       <td className={`px-4 py-2 font-bold text-center shadow-lg w-28 text-white bg-blue-900`}>今週の献立</td>
       <td className="bg-white p-0 w-44 shadow-md relative">
       <button className="px-4 py-2 font-bold text-center w-44 absolute z-0" onClick={() => setIsOpenMenuPlan(!isOpenMenuPlan)}>
-        {!selectedPlan ? "Loading" : selectedPlan}
+        {!selectedPlan ? <LoadingSpinner /> : selectedPlan}
       </button>
       <i className="fa-solid fa-caret-down py-2 cursor-pointer w-4 absolute z-10 right-1" onClick={() => setIsOpenMenuPlan(!isOpenMenuPlan)}></i>
       {isOpenMenuPlan && (
@@ -114,7 +115,7 @@ const DayRecipeRow = ({ weekdayCd }) => {
     <tr className="flex justify-center gap-2 mt-1">
       {/* <td></td> */}
       <td className={`${Const.DAYWISE_ITEMS[weekdayCd]?.bgColor} text-slate-700 px-4 py-2 font-bold text-center shadow-md w-28`}>{Const.DAYWISE_ITEMS[weekdayCd]?.weekday}</td>
-      <td className="bg-white px-4 py-2 font-bold text-center shadow-md w-44">{toweekRecipesStat?.isLoading ? "Loading" : toweekRecipes?.[weekdayCd]?.name}</td>
+      <td className="bg-white px-4 py-2 font-bold text-center shadow-md w-44">{toweekRecipesStat?.isLoading ? <LoadingSpinner /> : toweekRecipes?.[weekdayCd]?.name}</td>
     </tr>
   )
 

@@ -5,19 +5,10 @@ import { Home } from './components/home';
 import { BuyList } from './components/buylist';
 import { Login } from './components/login';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { RecipeList } from './components/recipelist/recipelist';
 
 
 export const  KondateMaker = () => {
-
-  // const [user, setUser] = useState({id: "", name: ""});
-  // const [menuPlanData, setMenuPlanData] = useState({menuPlanNm: "", menuPlanList: ""});
-  // const {selectedPlan, setSelectedPlan, menuPlanData, setMenuPlanData} = useKondateMaker();
-  // const [menuPlanList, setMenuPlanList] = useState([]);
-  // const [toweekRecipes, setToweekRecipes] = useState({"日": "", "月": "", "火": "", "水": "", "木": "", "金": "", "土": ""});
-
-
-  
-
 
   return (
     <>
@@ -39,11 +30,21 @@ export const  KondateMaker = () => {
               } 
             />
             <Route 
-              exact path="/buylist" 
+              exact path="/buyList" 
               element={
                 <>
                   <MemoizedHeader />
                   <BuyList />
+                  <Footer />
+                </>
+              } 
+            />
+            <Route 
+              exact path="/recipeList" 
+              element={
+                <>
+                  <MemoizedHeader />
+                  <RecipeList />
                   <Footer />
                 </>
               } 

@@ -1,78 +1,73 @@
-import * as Const from '../constants/constants.js';
-import React, { useEffect, useState } from "react";
-import { useInitItemsForIngred, useSalesAreaList, useUnitList } from "../hooks/useglobal";
-import { useKondateMaker } from "./global";
 
-export const InputIngred = ({ isInputIngredOpen, setIsInputIngredOpen, handleCloseInputIngred, onSubmit }) => {
+import React, { useEffect, useState } from "react";
+import { useInitItemsForIngred, useSalesAreaList, useUnitList } from "../../hooks/useglobal";
+import { useKondateMaker } from "../global";
+
+export const EditIngred = ({ submitAction, initData, isEditIngredOpen, setIsEditIngredOpen }) => {
 
   const { user } = useKondateMaker();
   const { unitList, unitListStat } = useUnitList();
   const { salesAreaList, salesAreaListStat } = useSalesAreaList();
-  const [ingredNm, setIngredNm] = useState("");
-  const [qty, setQty] = useState();
-  const [unitNm, setUnitNm] = useState("");
-  const [salesAreaNm, setSalesAreaNm] = useState("");
-  const { initItemsForIngred, initItemsForIngredStat } = useInitItemsForIngred(ingredNm, user.id);
+  const [ingredNm, setIngredNm] = useState(initData?.ingredNm);
+  const [qty, setQty] = useState(initData?.qty);
+  const [unitNm, setUnitNm] = useState(initData?.unitNm);
+  const [salesAreaNm, setSalesAreaNm] = useState();
+//   const [formData, setFormData] = useState()
 
+
+  const { initItemsForIngred, initItemsForIngredStat } = useInitItemsForIngred(ingredNm, user?.id);
+  
+
+  // 単位リストの先頭を設定
   useEffect(() => {
     if(!unitListStat?.isLoading) {
       setUnitNm(unitList[0]?.unitNm);
     }
   }, [unitList, unitListStat?.isLoading]);
 
+  // 売り場リストの先頭を設定
   useEffect(() => {
     if(!salesAreaListStat?.isLoading) {
       setSalesAreaNm(salesAreaList[0]?.nm);
     }
   }, [salesAreaList, salesAreaListStat?.isLoading]);
 
+  // 食材名からの初期値を設定
   useEffect(() => {
     if(!initItemsForIngredStat.isLoading) {
-      if(initItemsForIngred?.unitNm) {
         setUnitNm(initItemsForIngred?.unitNm);
-      }
-
-      if(initItemsForIngred?.salesAreaNm) {
         setSalesAreaNm(initItemsForIngred?.salesAreaNm);
       }
-    }
   }, [initItemsForIngred, initItemsForIngredStat]);
 
+//   useEffect(() => {
+//     setFormData({
+//       ingredNm,
+//       qty,
+//       unitNm,
+//       salesAreaNm
+//     })
+//   }, [ingredNm, qty, unitNm, salesAreaNm]);
+
+  const handleCloseInputIngred = () => {
+    setIsEditIngredOpen({ isOpen: false, recipeIngredId: null });
+  };
 
 
-  if (!isInputIngredOpen) return null; // モーダルが開かれていない場合は何も表示しない
-
-
-
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(`${ingredNm}, ${qty}, ${unitNm}, ${user?.id}`)
-    // フォームの送信処理を実装（例: 保存する、APIに送信するなど）
-    try {
-      const response = await fetch(`${Const.ROOT_URL}/inputIngred/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ingredNm, qty, unitNm, salesAreaNm, userId: user?.id }),
-      });    
-      const data = await response.json();
-      console.log(data)
-      onSubmit({ ingred_nm: data?.detail.ingred_nm, qty: data?.detail.qty, unit_nm: data?.detail.unit_nm, sales_area_nm: data?.detail.sales_area_nm });
-    } catch (error) {
-      console.log(error.message)
-    } finally {
-    }
-    
+    // console.log(`handleSubmit ${ingredNm}, ${qty}, ${unitNm}, ${salesAreaNm}`)
+
+    submitAction({ ingredNm, qty, unitNm, salesAreaNm });
     setIngredNm("");
     setQty("")
     setUnitNm("");
-    setIsInputIngredOpen(false); // モーダルを閉じる
   };
 
+  // if (!isInputIngredOpen) return null; // モーダルが開かれていない場合は何も表示しない
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-10">
       <div className="bg-white p-6 rounded-lg shadow-lg">
         {/* <h2 className="text-lg font-bold mb-4">食材を選択してください</h2> */}
 
@@ -106,7 +101,7 @@ export const InputIngred = ({ isInputIngredOpen, setIsInputIngredOpen, handleClo
               onChange={(e) => setUnitNm(e.target.value)}
               className="w-full px-3 py-2 border rounded-md text-base"
             >
-              {unitList.map((elem, index) => (
+              {unitList?.map((elem, index) => (
                 <option key={index} value={elem?.unitNm}>{elem?.unitNm}</option>  
               ))}
 
@@ -120,7 +115,7 @@ export const InputIngred = ({ isInputIngredOpen, setIsInputIngredOpen, handleClo
               onChange={(e) => setSalesAreaNm(e.target.value)}
               className="w-full px-3 py-2 border rounded-md text-base"
             >
-              {salesAreaList.map((elem, index) => (
+              {salesAreaList?.map((elem, index) => (
                 <option key={index} value={elem?.nm}>{elem?.nm}</option>  
               ))}
 
@@ -136,12 +131,12 @@ export const InputIngred = ({ isInputIngredOpen, setIsInputIngredOpen, handleClo
             >
               閉じる
             </button>
-            <button
-              type="submit"
-              className="bg-blue-400 text-white font-bold py-2 px-6 rounded-md shadow-md border-b-4 border-blue-500 ml-2 hover:bg-blue-400 hover:shadow-lg active:bg-blue-400 active:shadow-sm active:border-opacity-0 active:translate-y-1 transition duration-100"
-            >
-              保存
-            </button>
+              <button
+                type="submit"
+                className="bg-blue-400 text-white font-bold py-2 px-6 rounded-md shadow-md border-b-4 border-blue-500 ml-2 hover:bg-blue-400 hover:shadow-lg active:bg-blue-400 active:shadow-sm active:border-opacity-0 active:translate-y-1 transition duration-100"
+              >
+                保存
+              </button>
           </div>
         </form>
       </div>

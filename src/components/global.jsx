@@ -1,6 +1,6 @@
 import '../css/styles.css';
 import '../css/output.css';
-import { useMenuPlanNm, useMenuPlanList, useToweekRecipes } from '../hooks/useglobal.js';
+import { useMenuPlanNm, useMenuPlanList, useToweekRecipes, useRecipeList } from '../hooks/useglobal.js';
 import { useNavigate } from 'react-router-dom';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { FooterButton } from './common';
@@ -14,8 +14,13 @@ export function KondateMakerProvider({ children }) {
   const {menuPlanNm, menuPlanNmStat} = useMenuPlanNm(user);
   const [selectedPlan, setSelectedPlan] = useState(menuPlanNm);
   const {menuPlanList, menuPlanListStat} = useMenuPlanList(user);
-  const {toweekRecipes, toweekRecipesStat} = useToweekRecipes(selectedPlan, user); //useState({"日": "", "月": "", "火": "", "水": "", "木": "", "金": "", "土": ""});
-  
+  const {toweekRecipes, toweekRecipesStat} = useToweekRecipes(selectedPlan, user);
+  const { recipeList, recipeListStat } = useRecipeList(user);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const [isInputIngredOpen, setIsInputIngredOpen] = useState(false);
+  const [isEditIngredOpen, setIsEditIngredOpen] = useState({ isOpen: false, recipeIngredId: null });
+  const [isInputRecipeOpen, setIsInputRecipeOpen] = useState(false);
+  const [isEditRecipeOpen, setIsEditRecipeOpen] = useState(false);
 
   return (
     <KondateMakerContext.Provider 
@@ -30,6 +35,18 @@ export function KondateMakerProvider({ children }) {
         menuPlanListStat,
         toweekRecipes,
         toweekRecipesStat,
+        recipeList,
+        recipeListStat,
+        menuPosition,
+        setMenuPosition,
+        isInputIngredOpen,
+        setIsInputIngredOpen,
+        isEditIngredOpen,
+        setIsEditIngredOpen,
+        isInputRecipeOpen,
+        setIsInputRecipeOpen,
+        isEditRecipeOpen,
+        setIsEditRecipeOpen
       }}>
       {children}
     </KondateMakerContext.Provider>
@@ -90,11 +107,11 @@ export const Footer = () => {
   }
 
   const onClickToBuyList = () => {
-    navigate("/buylist");
+    navigate("/buyList");
   }
 
   const onClickRecipe = () => {
-    alert("開発中..");
+    navigate("/recipeList");
   }
 
   const onClickMenuPlan = () => {

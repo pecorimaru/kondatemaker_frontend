@@ -1,23 +1,27 @@
+import axios from 'axios';
+import * as Const from '../constants/constants.js';
 import '../css/styles.css';
 import '../css/output.css';
 import { useEffect, useState } from 'react';
-import { InputIngred } from './inputingred';
+import { InputIngred } from './inputform/inputingred.jsx';
 import { useKondateMaker } from './global';
 import { switchCompletionState } from '../requests/requests';
 import { useBuyIngreds } from '../hooks/useglobal';
 
 export const BuyList = () => {
 
-  const { user } = useKondateMaker();
+  const { user, isInputIngredOpen, setIsInputIngredOpen } = useKondateMaker();
   const { buyIngreds, buyIngredsStat } = useBuyIngreds(user);
   const [incompleteRows, setIncompleteRows] = useState();    // 未完リスト
   const [completeRows, setCompleteRows] = useState();        // 完了済リスト
+  // const [isInputIngredOpen, setIsInputIngredOpen] = useState(false);
 
 
   useEffect(() => {
 
     if (!buyIngredsStat.isLoading) {
 
+      
       setIncompleteRows(
         buyIngreds
         ?.filter(buyIngreds => buyIngreds.bought_flg === "F")
@@ -46,7 +50,6 @@ export const BuyList = () => {
 
   const handleCheckboxChange = (index, isChecked) => {
 
-
     if (isChecked) {
       // チェックした行を完了済リストに追加
       const selectedRow = incompleteRows[index];
@@ -74,23 +77,48 @@ export const BuyList = () => {
 
   }
 
-  const [isInputIngredOpen, setIsInputIngredOpen] = useState(false);
 
   const handleOpenInputIngred = () => {
     setIsInputIngredOpen(true);
   };
 
-  const handleCloseInputIngred = () => {
-    setIsInputIngredOpen(false);
-  };
 
-  const handleSubmit = (data) => {
-    setIncompleteRows([...incompleteRows, { checked: false, ingred_nm: data.ingred_nm, qty: data.qty, unit_nm: data.unit_nm, sales_area_nm: data.sales_area_nm }]);
 
-    console.log(data)
+
+
+  const submitAddBuyIngred = async (formData) => {
+    // e.preventDefault();
+    console.log(`submitAddBuyIngred ${formData?.ingredNm}, ${formData?.qty}, ${formData?.unitNm}, ${formData?.salesAreaNm}`)
+    // フォームの送信処理を実装（例: 保存する、APIに送信するなど）
+    try {
+      const response = await axios.post(`${Const.ROOT_URL}/inputIngred/submitAddBuyIngred`, { 
+        ingredNm: formData?.ingredNm,
+        qty: formData?.qty, 
+        unitNm: formData?.unitNm, 
+        salesAreaNm: formData?.salesAreaNm, 
+        userId: user?.id 
+      });
+      const data = await response.data;
+      if (data.statusCode === 200) {
+        setIncompleteRows([
+          ...incompleteRows, { 
+            checked: false, 
+            ingred_nm: data?.dict_buy_ingreds?.ingred_nm, 
+            qty: data?.dict_buy_ingreds?.qty, 
+            unit_nm: data?.dict_buy_ingreds?.unit_nm, 
+            sales_area_nm: data?.dict_buy_ingreds?.sales_area_nm 
+          }
+        ]);
+
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      console.error("登録失敗", error);
+    }
+    
     setIsInputIngredOpen(false); // モーダルを閉じる
   };
-
 
 
   return(
@@ -155,12 +183,11 @@ export const BuyList = () => {
             ))}
           </tbody>
         </table>
-        <InputIngred 
+        {isInputIngredOpen ? <InputIngred 
           isInputIngredOpen={isInputIngredOpen} 
           setIsInputIngredOpen={setIsInputIngredOpen} 
-          handleCloseInputIngred={handleCloseInputIngred} 
-          onSubmit={handleSubmit} 
-        />
+          submitAction={submitAddBuyIngred} 
+        /> : null}
       </div>    
     </div>
   );
