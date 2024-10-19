@@ -53,30 +53,6 @@ export const RecipeIngredRows = ({ recipeRow }) => {
     );
   };
   
-
-  // const appendRecipeIngred = (newRecipeIngred) => {  
-  //   setDispRecipeIngredList([
-  //     ...dispRecipeIngredList, 
-  //     {
-  //       ...newRecipeIngred,
-  //       num: dispRecipeIngredList.length + 1,
-  //       menuVisible: false,
-  //     }
-  //   ]);
-  // }
-
-  // const spliceRecipeIngred = (index) => {
-  //   const newRecipeIngredList = [...dispRecipeIngredList];
-  //   newRecipeIngredList.splice(index, 1);
-  //   setDispRecipeIngredList(
-  //     {
-  //       ...newRecipeIngredList,
-  //       num: dispRecipeIngredList.length + 1,
-  //       menuVisible: false,
-  //     }
-  //   );
-  // }
-  
   const closeRecipeIngredContextMenu = useCallback(() => {
     setDispRecipeIngredList(
       recipeIngredList?.map((item, index) => ({
@@ -115,9 +91,7 @@ export const RecipeIngredRows = ({ recipeRow }) => {
 
   const submitEditRecipeIngred = async (formData) => {
     console.log(`submitEditRecipeIngred ${formData?.ingredNm}, ${formData?.qty}, ${formData?.unitNm}`)
-    // console.log(`recipe_ingred_id:${recipeIngredId}`)
-    // const updateable = window.confirm(`更新対象レシピ食材ID：${isEditIngredOpen?.recipeIngredId}`)
-    // if (updateable) {
+
       try {
         const response = await axios.put(`${Const.ROOT_URL}/recipeList/submitEditRecipeIngred`, { 
           recipeIngredId: isEditIngredOpen?.recipeIngredId,

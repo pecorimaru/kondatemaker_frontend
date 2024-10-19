@@ -5,7 +5,7 @@ import { useFetchData } from "../utils/hooksutils";
 export function useMenuPlanNm(user) {
     const { data, error, isLoading } = useFetchData("home/menuPlanNm", decamelizeKeys({ userId: user?.id }))
     return { menuPlanNm: data, menuPlanNmStat: { error, isLoading } };
-  }
+}
   
 export function useMenuPlanList(user) {
     const { data, error, isLoading } = useFetchData("home/menuPlanList", decamelizeKeys({ userId: user?.id }))

@@ -10,6 +10,7 @@ import * as Const from '../constants/constants.js';
 import { useKondateMaker } from './global';
 
 import { LoadingSpinner } from './common.jsx';
+import { decamelizeKeys } from 'humps';
 
 
 export const Login = () => {
@@ -82,8 +83,8 @@ export const Login = () => {
     setError(null);
 
     try {
-
-      const response = await axios.post(`${Const.ROOT_URL}/login`, { email, password });
+      console.log(decamelizeKeys({ email, password }))
+      const response = await axios.post(`${Const.ROOT_URL}/login`, decamelizeKeys({ email, password }));
       const data  = response.data;
 
       if (data.statusCode === 200) {
