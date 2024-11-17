@@ -1,18 +1,21 @@
 import './css/styles.css';
 import './css/output.css';
-import { Footer, MemoizedHeader } from './components/global';
-import { Home } from './components/home';
-import { BuyList } from './components/buylist';
-import { Login } from './components/login';
+import { Footer } from './components/global/footer';
+import { MemoizedHeader } from './components/global/global';
+import { Home } from './components/home/home';
+import { Buy } from './components/buy/buy';
+import { Login } from './components/login/login';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { RecipeList } from './components/recipelist/recipelist';
+import { Recipe } from './components/recipe/recipe';
+import { MenuPlan } from './components/menuPlan/menuPlan';
+import { Ingred } from './components/ingred/ingred';
 
 
 export const  KondateMaker = () => {
 
   return (
     <>
-      <div className="bg-slate-200 h-screen font-sans">
+      <div className="bg-slate-100 h-screen font-sans">
         <Router>
           <Routes>
             <Route 
@@ -20,7 +23,7 @@ export const  KondateMaker = () => {
               element={
                 <Login />} />
             <Route 
-              exact path="/main" 
+              exact path="/home" 
               element={
                 <div>
                   <MemoizedHeader />
@@ -30,21 +33,41 @@ export const  KondateMaker = () => {
               } 
             />
             <Route 
-              exact path="/buyList" 
+              exact path="/buy" 
               element={
                 <>
                   <MemoizedHeader />
-                  <BuyList />
+                  <Buy />
                   <Footer />
                 </>
               } 
             />
             <Route 
-              exact path="/recipeList" 
+              exact path="/menuPlan" 
               element={
                 <>
                   <MemoizedHeader />
-                  <RecipeList />
+                  <MenuPlan />
+                  <Footer />
+                </>
+              } 
+            />
+            <Route 
+              exact path="/recipe" 
+              element={
+                <>
+                  <MemoizedHeader />
+                  <Recipe />
+                  <Footer />
+                </>
+              } 
+            />
+            <Route 
+              exact path="/ingred" 
+              element={
+                <>
+                  <MemoizedHeader />
+                  <Ingred />
                   <Footer />
                 </>
               } 

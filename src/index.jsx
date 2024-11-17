@@ -6,7 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import './css/index.css';
 
 import { KondateMaker } from './kondatemaker';
-import { KondateMakerProvider } from './components/global';
+import { KondateMakerProvider } from './components/global/global';
 
 const rootElement = document.getElementById("root");
 const root = createRoot(rootElement);
