@@ -1,29 +1,31 @@
 import '../../css/styles.css';
 import '../../css/output.css';
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { useKondateMaker } from "../global/global";
 import { useEventHandler } from "../../hooks/useEventHandler";
 import { useIngredNmSuggestions } from "../../hooks/useFetchData";
 
-import { FormCloseButton, FormSubmitButton, OptionConstDict, SuggestionsInput } from "../global/common";
+import { FormCloseButton, FormSubmitButton, OptionConstDict, Required, SuggestionsInput } from "../global/common";
 
 
 export const IngredForm = ({ submitAction, closeIngredForm, editData }) => {
 
-  const { user, unitDict, unitDictStat, salesAreaDict, salesAreaDictStat } = useKondateMaker();
+  const { unitDict, unitDictStat, salesAreaDict, salesAreaDictStat, setIsOpeningForm } = useKondateMaker();
 
   const [ingredNm, setIngredNm] = useState(editData?.ingredNm);
   const [ingredNmK, setIngredNmK] = useState(editData?.ingredNmK);
   const [parentIngredNm, setParentIngredNm] = useState(editData?.parentIngredNm);
-  const [standardUnitCd, setStandardUnitCd] = useState(editData ? editData?.standardUnitCd : Object.keys(unitDict)[0]);
+  const [buyUnitCd, setStandardUnitCd] = useState(editData ? editData?.buyUnitCd : Object.keys(unitDict)[0]);
   const [salesAreaType, setSalesAreaType] = useState(editData ? editData?.salesAreaType : Object.keys(salesAreaDict)[0]);
-  const { ingredNmSuggestions, ingredNmSuggestionsStat } = useIngredNmSuggestions(parentIngredNm, user?.id);
+  const { ingredNmSuggestions, ingredNmSuggestionsStat } = useIngredNmSuggestions(parentIngredNm);
   const [ingredNmSuggestionsVisible, setIngredNmSuggestionsVisible] = useState(false);
   
   const parentIngredNmRef = useRef(null);
   const ingredNmSuggestionsRef = useRef(null);
+
+  useEffect(() => {setIsOpeningForm(true)}, []);
 
   const handleParentIngredNmChange = (e) => {
     e.preventDefault();
@@ -33,7 +35,7 @@ export const IngredForm = ({ submitAction, closeIngredForm, editData }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    submitAction({ ingredNm, ingredNmK, parentIngredNm, standardUnitCd, salesAreaType });
+    submitAction({ ingredNm, ingredNmK, parentIngredNm, buyUnitCd, salesAreaType });
   };
 
   const handleKeyDown = (e) => {
@@ -55,7 +57,7 @@ export const IngredForm = ({ submitAction, closeIngredForm, editData }) => {
       <div className="bg-white p-6 rounded-lg shadow-lg">
         <form onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm text-gray-700">食材名:</label>
+            <label className="block text-sm text-gray-700">食材名<Required/></label>
             <input
               type="text"
               value={ingredNm}
@@ -66,7 +68,7 @@ export const IngredForm = ({ submitAction, closeIngredForm, editData }) => {
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm text-gray-700">食材名（かな）:</label>
+            <label className="block text-sm text-gray-700">食材名（かな）</label>
             <input
               type="text"
               value={ingredNmK}
@@ -77,7 +79,7 @@ export const IngredForm = ({ submitAction, closeIngredForm, editData }) => {
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm text-gray-700">購入食材名:</label>
+            <label className="block text-sm text-gray-700">購入食材名<Required/></label>
             <input
               type="text"
               value={parentIngredNm}
@@ -98,9 +100,9 @@ export const IngredForm = ({ submitAction, closeIngredForm, editData }) => {
           )}
 
           <div className="mt-4">
-            <label className="block text-sm text-gray-700">標準単位:</label>
+            <label className="block text-sm text-gray-700">標準単位<Required/></label>
             <select
-              value={standardUnitCd}
+              value={buyUnitCd}
               onChange={(e) => setStandardUnitCd(e.target.value)}
               className="form-input-base"
             >
@@ -109,7 +111,7 @@ export const IngredForm = ({ submitAction, closeIngredForm, editData }) => {
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm text-gray-700">売り場:</label>
+            <label className="block text-sm text-gray-700">売り場<Required/></label>
             <select
               value={salesAreaType}
               onChange={(e) => setSalesAreaType(e.target.value)}

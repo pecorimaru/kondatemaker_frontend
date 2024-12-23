@@ -2,19 +2,21 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { useKondateMaker } from "../global/global";
 import { useRecipeNmSuggestions } from "../../hooks/useFetchData";
-import { FormCloseButton, FormSubmitButton, OptionConstDict, SuggestionsInput } from "../global/common";
+import { FormCloseButton, FormSubmitButton, OptionConstDict, Required, SuggestionsInput } from "../global/common";
 
 export const MenuPlanDetForm = ({ submitAction, closeMenuPlanDetForm, editData }) => {
   
-  const { user, weekdayDict, weekdayDictStat } = useKondateMaker()
+  const { weekdayDict, weekdayDictStat, setIsOpeningForm } = useKondateMaker()
 
   const [weekdayCd, setWeekdayCd] = useState(editData ? editData?.weekdayCd : Object.keys(weekdayDict)[0]);
   const [recipeNm, setRecipeNm] = useState(editData?.recipeNm);
 
-  const { recipeNmSuggestions, recipeNmSuggestionsStat } = useRecipeNmSuggestions(recipeNm, user?.id);
+  const { recipeNmSuggestions, recipeNmSuggestionsStat } = useRecipeNmSuggestions(recipeNm);
   const [recipeNmSuggestionsVisible, setRecipeNmSuggestionsVisible] = useState(false);
   const recipeNmRef = useRef(null);
   const recipeNmSuggestionsRef = useRef(null);
+
+  useEffect(() => {setIsOpeningForm(true)}, []);
 
   const handleRecipeNmChange = (e) => {
     e.preventDefault();
@@ -32,7 +34,7 @@ export const MenuPlanDetForm = ({ submitAction, closeMenuPlanDetForm, editData }
       <div className="bg-white p-6 rounded-lg shadow-lg">
         <form onSubmit={handleSubmit}>
           <div className="mt-4">
-              <label className="block text-sm text-gray-700">曜日:</label>
+              <label className="block text-sm text-gray-700">曜日<Required/></label>
               <select
                 value={weekdayCd}
                 onChange={(e) => setWeekdayCd(e.target.value)}
@@ -42,7 +44,7 @@ export const MenuPlanDetForm = ({ submitAction, closeMenuPlanDetForm, editData }
               </select>
             </div>
           <div className="mt-4">
-            <label className="block text-sm text-gray-700">レシピ名:</label>
+            <label className="block text-sm text-gray-700">レシピ名<Required/></label>
             <input
               type="text"
               id="recipeNm"

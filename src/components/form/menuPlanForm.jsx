@@ -1,12 +1,16 @@
 
-import React, { useState } from "react";
-import { FormCloseButton, FormSubmitButton } from "../global/common";
+import React, { useEffect, useState } from "react";
+import { FormCloseButton, FormSubmitButton, Required } from "../global/common";
+import { useKondateMaker } from "../global/global";
 
 export const MenuPlanForm = ({ submitAction, closeMenuPlanForm, editData }) => {
 
+  const { setIsOpeningForm } = useKondateMaker();
   const [menuPlanNm, setMenuPlanNm] = useState(editData?.menuPlanNm);
   const [menuPlanNmK, setMenuPlanNmK] = useState(editData?.menuPlanNmK);
   
+  useEffect(() => {setIsOpeningForm(true)}, []);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     submitAction({ menuPlanNm, menuPlanNmK });
@@ -18,7 +22,7 @@ export const MenuPlanForm = ({ submitAction, closeMenuPlanForm, editData }) => {
 
         <form onSubmit={handleSubmit}>
           <div className="mt-4">
-            <label className="block text-sm text-gray-700">献立プラン名:</label>
+            <label className="block text-sm text-gray-700">献立プラン名<Required/></label>
             <input
               type="text"
               id="menuPlanNm"
@@ -30,7 +34,7 @@ export const MenuPlanForm = ({ submitAction, closeMenuPlanForm, editData }) => {
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm text-gray-700">献立プラン名（かな）:</label>
+            <label className="block text-sm text-gray-700">献立プラン名（かな）</label>
             <input
               type="text"
               id="menuPlanNmK"

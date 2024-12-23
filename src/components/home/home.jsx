@@ -2,7 +2,6 @@ import '../../css/styles.css';
 import '../../css/output.css';
 
 import React, { useEffect, useRef, useState } from 'react';
-import axios from 'axios';
 
 import * as Const from '../../constants/constants.js';
 
@@ -15,11 +14,11 @@ import { apiClient } from '../../utils/axiosClient.js';
 
 
 export const Home = () => {
- 
-  const { user, weekdayDict, weekdayDictStat } = useKondateMaker();
 
-  const { selectedPlan, selectedPlanStat, selectedPlanMutate } = useSelectedPlan(user?.id);
-  const { menuPlanList, menuPlanListStat } = useMenuPlanList(user?.id);
+  const { weekdayDict, weekdayDictStat, showMessage } = useKondateMaker();
+
+  const { selectedPlan, selectedPlanStat, selectedPlanMutate } = useSelectedPlan();
+  const { menuPlanList, menuPlanListStat } = useMenuPlanList();
 
   // 献立プラン曜日毎明細リスト
   // 曜日をキーとして献立プラン明細をリスト形式で格納
@@ -27,30 +26,23 @@ export const Home = () => {
   // ・[日] [レシピ１, レシピ２, ...]
   // ・[月] [レシピ１, レシピ２, ...]
   // 　...
-  const { toweekMenuPlanDetListDict, toweekMenuPlanDetListDictStat, toweekMenuPlanDetListDictMutate } = useToweekMenuPlanDetListDict(user?.id);
+  const { toweekMenuPlanDetListDict, toweekMenuPlanDetListDictStat, toweekMenuPlanDetListDictMutate } = useToweekMenuPlanDetListDict();
   
-  const [selectedPlanDisp, setSelectedPlanDisp] = useState({ menuPlanId: null, menuPlanNm: ""});
+  // const [selectedPlanDisp, setSelectedPlanDisp] = useState({ menuPlanId: null, menuPlanNm: ""});
   const [toweekMenuPlanDetListDictDisp, setToweekMenuPlanDetListDictDisp] = useState();
   const [isMenuPlanComboBoxOpen, setIsMenuPlanComboBoxOpen] = useState(false);
   const menuPlanComboBoxRef = useRef(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // データフェッチした選択中献立プランを表示用変数にセット
-  useEffect(() => {
-    if(!selectedPlanStat?.isLoading) {
-      if (selectedPlan) {
-        setSelectedPlanDisp(selectedPlan);
-      } else {
-        setSelectedPlanDisp({ menuPlanId: null, menuPlanNm: "未選択"});
-      }
-    };
-  }, [selectedPlan, selectedPlanStat?.isLoading, setSelectedPlanDisp]); 
+
+  // // データフェッチした選択中献立プランを表示用変数にセット
+  // useEffect(() => {
+  //   if(!selectedPlanStat?.isLoading) setSelectedPlanDisp(selectedPlan);
+  // }, [selectedPlan, selectedPlanStat?.isLoading, setSelectedPlanDisp]); 
 
   // データフェッチした献立プラン曜日毎明細リストを表示用リストにセット
   useEffect(() => {
-    if(!toweekMenuPlanDetListDictStat?.isLoading) {
-      setToweekMenuPlanDetListDictDisp(toweekMenuPlanDetListDict);
-    };
+    if(!toweekMenuPlanDetListDictStat?.isLoading) setToweekMenuPlanDetListDictDisp(toweekMenuPlanDetListDict);
   }, [toweekMenuPlanDetListDict, toweekMenuPlanDetListDictStat?.isLoading, setToweekMenuPlanDetListDictDisp]); 
 
   const handleMenuPlanComboBoxClick = async (menuPlan) => {
@@ -63,21 +55,19 @@ export const Home = () => {
     if (!changeable) {
       return;
     };
-
-    setSelectedPlanDisp({ menuPlanId: menuPlan.menuPlanId, menuPlanNm: menuPlan.menuPlanNm });
-    setIsRefreshing(true)
+    selectedPlanMutate({ menuPlanId: menuPlan.menuPlanId, menuPlanNm: menuPlan.menuPlanNm }, false);
+    setIsRefreshing(true);
     try {
-      const response = await apiClient.put(`${Const.ROOT_URL}/home/submitRecreateToweekMenuPlan`, { selectedPlanId: menuPlan.menuPlanId, userId: user?.id });
+      const response = await apiClient.put(`${Const.ROOT_URL}/home/submitRecreateToweekMenuPlan`, { selectedPlanId: menuPlan.menuPlanId });
       const data  = response.data;
-      console.log("更新成功", data);
-      selectedPlanMutate({ menuPlanId: menuPlan.menuPlanId, menuPlanNm: menuPlan.menuPlanNm });
-      toweekMenuPlanDetListDictMutate(data.newToweekMenuPlanDetListDict);
+      console.log(data.message, data);
+      toweekMenuPlanDetListDictMutate(data.newToweekMenuPlanDetListDict, false);
     } catch (error) {
-      console.error("更新失敗", error);
+      selectedPlanMutate(selectedPlan);
+      showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     } finally {
       setIsRefreshing(false);
     };
-
   };
 
   // 入力候補 or レシピ名 以外を押下した場合に入力候補エリアを非表示
@@ -102,27 +92,27 @@ export const Home = () => {
               ref={menuPlanComboBoxRef}
             >
               <button className="py-2 w-full">
-                {!selectedPlanStat.isLoading ? selectedPlanDisp?.menuPlanNm : <LoadingSpinner /> }
+                {!selectedPlanStat.isLoading ? selectedPlan?.menuPlanNm : <LoadingSpinner /> }
               </button>
-              <div className="flex items-center w-6 cursor-pointer z-10">
+              <div className="flex items-center w-6 cursor-pointer">
                   <i className="fa-solid fa-caret-down" />
               </div>
               {isMenuPlanComboBoxOpen && (
                 <ul className="absolute w-48 bg-white border rounded-md shadow-lg">
-                  {!menuPlanListStat.isLoading ? menuPlanList?.map((menuPlan, index) => (
+                  {!menuPlanListStat.isLoading && !menuPlanListStat.error ? menuPlanList?.map((menuPlan, index) => (
                   <li
                     key={index}
                     className="px-4 py-2 hover:bg-blue-100 cursor-pointer"
                     onClick={() => handleMenuPlanComboBoxClick(menuPlan)}
                   >
-                    {menuPlan.menuPlanNm}
+                    {menuPlan?.menuPlanNm}
                   </li>
                   )): <li className="flex justify-center items-center h-10"><LoadingSpinner /></li>}
                 </ul>
               )}
             </td>
           </tr>
-          {!weekdayDictStat.isLoading && Object.entries(weekdayDict)?.map((weekday) => (
+          {!weekdayDictStat.isLoading && weekdayDict && Object.entries(weekdayDict)?.map((weekday) => (
             <React.Fragment key={weekday[Const.DICT_IDX.CD]}>
               <ToweekMenuPlanDet weekdayCd={weekday[Const.DICT_IDX.CD]} toweekMenuPlanDetListDictDisp={toweekMenuPlanDetListDictDisp} toweekMenuPlanDetListDictMutate={toweekMenuPlanDetListDictMutate} isRefreshing={isRefreshing} />
             </React.Fragment>

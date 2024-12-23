@@ -12,7 +12,7 @@ const rootElement = document.getElementById("root");
 const root = createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId="160003454125-03dkjca5khvs730fqfkmiguatdm8it58.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={`${process.env.REACT_APP_GOOGLE_CLIENT_ID}`}>
       <KondateMakerProvider>
         <KondateMaker />
       </KondateMakerProvider>

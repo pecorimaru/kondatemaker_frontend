@@ -27,18 +27,34 @@ td {
 }
 
 /* 「>」指定により、.detail-table-row の直下に配置された .detail-table-data にのみ適用  */
-.detail-table-row:hover > .detail-table-data {
+/* .detail-table-row:hover > .detail-table-data {
   @apply bg-blue-100;
-}
+} */
 
 .form-bg-layout-base {
   @apply fixed inset-0 flex justify-center bg-black bg-opacity-50 items-center z-10;
 }
 
 .form-input-base {
-  @apply w-full px-3 py-2 h-10 border rounded-md text-base;
+  @apply w-full px-3 py-2 h-10 border rounded-sm text-base;
 }
 
 .weekday-recipe-data-base {
   @apply px-4 py-2 min-h-10 w-48 rounded-sm shadow-md select-none;
+}
+
+.login-input-base {
+  @apply text-base w-full px-4 py-2 mt-1 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.login-link-text-base {
+  @apply text-sm text-blue-500 font-bold hover:underline hover:cursor-pointer hover:text-red-700;
+}
+
+.button-base {
+  @apply shadow-md border-b-4 hover:shadow-lg active:shadow-sm active:border-b-transparent active:translate-y-0.5 transition duration-100
+}
+
+.white-button-base {
+  @apply bg-white border-gray-300 shadow-md border-x border-t border-b-4 hover:shadow-lg active:shadow-sm active:border-b active:translate-y-0.5 transition duration-100
 }

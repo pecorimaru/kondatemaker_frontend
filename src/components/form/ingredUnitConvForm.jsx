@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import * as Const from '../../constants/constants.js';
 
@@ -8,16 +8,18 @@ import { useKondateMaker } from "../global/global";
 
 export const IngredUnitConvForm = ({ ingred, submitAction, closeIngredUnitConvForm, editData }) => {
 
-  const { unitDict, unitDictStat } = useKondateMaker();
-  const [fromUnitCd, setFromUnitCd] = useState(editData ? editData?.fromUnitCd : Object.keys(unitDict)[0]);
+  const { unitDict, setIsOpeningForm } = useKondateMaker();
+  const [convUnitCd, setFromUnitCd] = useState(editData ? editData?.convUnitCd : Object.keys(unitDict)[0]);
   const [convRate, setConvRate] = useState(editData?.convRate * ingred.unitConvWeight);
   const [excConvRate, setExcConvRate] = useState(editData?.convWeight / editData?.convRate);
-  const [convUnitWeight, setConvUnitWeight] = useState(editData?.convWeight);
+  const [convUnitWeight] = useState(editData?.convWeight);
   const [formToggle, setFormToggle] = useState(ingred.unitConvWeight === Const.UNIT_CONV_TYPE_100_COMP ? true : false);
+
+  useEffect(() => {setIsOpeningForm(true)}, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    submitAction({ fromUnitCd, convRate });
+    submitAction({ convUnitCd, convRate });
   };
 
   return (
@@ -37,7 +39,7 @@ export const IngredUnitConvForm = ({ ingred, submitAction, closeIngredUnitConvFo
           {formToggle ?
             <ConvUnitToStandardUnit
               ingred={ingred}
-              fromUnitCd={fromUnitCd}
+              convUnitCd={convUnitCd}
               setFromUnitCd={setFromUnitCd}
               convRate={convRate}
               setConvRate={setConvRate}
@@ -47,7 +49,7 @@ export const IngredUnitConvForm = ({ ingred, submitAction, closeIngredUnitConvFo
             /> :
             <StandardUnitToConvUnit
               ingred={ingred}
-              fromUnitCd={fromUnitCd}
+              convUnitCd={convUnitCd}
               setFromUnitCd={setFromUnitCd}
               convRate={convRate}
               setConvRate={setConvRate}
@@ -67,7 +69,7 @@ export const IngredUnitConvForm = ({ ingred, submitAction, closeIngredUnitConvFo
 
 
 // 例：かぼちゃは1個あたり1200g
-const ConvUnitToStandardUnit = ({ ingred, fromUnitCd, setFromUnitCd, setConvRate, excConvRate, setExcConvRate, convUnitWeight }) => {
+const ConvUnitToStandardUnit = ({ ingred, convUnitCd, setFromUnitCd, setConvRate, excConvRate, setExcConvRate, convUnitWeight }) => {
 
   const { unitDict, unitDictStat } = useKondateMaker();
 
@@ -86,8 +88,8 @@ const ConvUnitToStandardUnit = ({ ingred, fromUnitCd, setFromUnitCd, setConvRate
         <div className="flex items-center mt-2">
           <span className="mx-2 text-center w-8">{convUnitWeight ? convUnitWeight : 1}</span>
           <select
-            id="fromUnitCd"
-            value={fromUnitCd}
+            id="convUnitCd"
+            value={convUnitCd}
             onChange={(e) => setFromUnitCd(e.target.value)}
             className="form-input-base w-28"
           >
@@ -107,7 +109,7 @@ const ConvUnitToStandardUnit = ({ ingred, fromUnitCd, setFromUnitCd, setConvRate
           step="0.1"
         />
         <span className="pl-2 w-14">
-          {unitDict[ingred.standardUnitCd]}
+          {unitDict[ingred.buyUnitCd]}
         </span>
       </div>
     </div>
@@ -115,7 +117,7 @@ const ConvUnitToStandardUnit = ({ ingred, fromUnitCd, setFromUnitCd, setConvRate
 };
 
 // かぼちゃは100gあたり0.83個
-const StandardUnitToConvUnit = ({ ingred, fromUnitCd, setFromUnitCd, convRate, setConvRate, excConvRate, setExcConvRate }) => {
+const StandardUnitToConvUnit = ({ ingred, convUnitCd, setFromUnitCd, convRate, setConvRate, excConvRate, setExcConvRate }) => {
 
   const { unitDict, unitDictStat } = useKondateMaker();
 
@@ -128,7 +130,7 @@ const StandardUnitToConvUnit = ({ ingred, fromUnitCd, setFromUnitCd, convRate, s
   return (
     <div className="mx-0.5">
       <div className="text-lg">
-        {!unitDictStat.isLoading  ? `${ingred.ingredNm} は ${ingred.unitConvWeight} ${unitDict[ingred.standardUnitCd]} あたり` : <LoadingSpinner />}
+        {!unitDictStat.isLoading  ? `${ingred.ingredNm} は ${ingred.unitConvWeight} ${unitDict[ingred.buyUnitCd]} あたり` : <LoadingSpinner />}
       </div>
       <div className="flex justify-between gap-1 mt-2">
         <input
@@ -141,7 +143,7 @@ const StandardUnitToConvUnit = ({ ingred, fromUnitCd, setFromUnitCd, convRate, s
         />
         <select
           id="convRate"
-          value={fromUnitCd}
+          value={convUnitCd}
           onChange={(e) => setFromUnitCd(e.target.value)}
           className="form-input-base w-28"
         >

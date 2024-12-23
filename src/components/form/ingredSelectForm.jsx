@@ -9,28 +9,31 @@ import { useKondateMaker } from "../global/global";
 import { useEventHandler } from "../../hooks/useEventHandler";
 import { useDefaultSetsByIngred, useIngredNmSuggestions, useUnitDictByIngred } from "../../hooks/useFetchData";
 
-import { FormCloseButton, FormSubmitButton, LoadingSpinner, OptionConstDict, SuggestionsInput } from "../global/common";
+import { FormCloseButton, FormSubmitButton, LoadingSpinner, OptionConstDict, Required, SuggestionsInput } from "../global/common";
 
 
 export const IngredSelectForm = ({ prevScreenType, submitAction, closeIngredForm, editData }) => {
 
-  const { user, salesAreaDict, salesAreaDictStat } = useKondateMaker();
+  const { salesAreaDict, salesAreaDictStat, setIsOpeningForm } = useKondateMaker();
 
   const [ingredNm, setIngredNm] = useState(editData?.ingredNm);
   const [qty, setQty] = useState(editData?.qty);
-  const { unitDictByIngred, unitDictByIngredStat } = useUnitDictByIngred(ingredNm ?? "", user?.id);
+  const { unitDictByIngred, unitDictByIngredStat } = useUnitDictByIngred(ingredNm ?? "");
   const [unitCd, setUnitCd] = useState(editData ? editData?.unitCd : !unitDictByIngredStat.isLoading && Object.keys(unitDictByIngred)[0]);
   const [salesAreaType, setSalesAreaType] = useState(editData ? editData?.salesAreaType : Object.keys(salesAreaDict)[0]);
 
-  const { defaultSetsByIngred, defaultSetsByIngredStat } = useDefaultSetsByIngred(ingredNm, user?.id);
-  const { ingredNmSuggestions, ingredNmSuggestionsStat } = useIngredNmSuggestions(ingredNm, user?.id);
+  const { defaultSetsByIngred, defaultSetsByIngredStat } = useDefaultSetsByIngred(ingredNm);
+  const { ingredNmSuggestions, ingredNmSuggestionsStat } = useIngredNmSuggestions(ingredNm);
   const [ingredNmSuggestionsVisible, setIngredNmSuggestionsVisible] = useState(false);
+  const [isRegisterContinue, setIsRegisterContinue] = useState(false);
   
   const ingredNmRef = useRef(null);
   const ingredNmSuggestionsRef = useRef(null);
 
   // 食材名以外の項目を変更してもデフォルト値更新の処理が動作してしまうため、フラグで管理
   const [isIngredNmChanged, setIsIngredNmChanged] = useState(false);
+
+  useEffect(() => {setIsOpeningForm(true)}, []);
 
   // 食材名を変更した場合に単位と売り場の初期値を更新
   useEffect(() => {
@@ -56,7 +59,10 @@ export const IngredSelectForm = ({ prevScreenType, submitAction, closeIngredForm
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    submitAction({ ingredNm, qty, unitCd, salesAreaType });
+    console.log("isRegisterContinue", isRegisterContinue)
+    submitAction({ ingredNm, qty, unitCd, salesAreaType, isRegisterContinue });
+    setIngredNm("");
+    setQty("");
   };
 
   const handleKeyDown = (e) => {
@@ -78,7 +84,7 @@ export const IngredSelectForm = ({ prevScreenType, submitAction, closeIngredForm
       <div className="bg-white p-6 rounded-lg shadow-lg">
         <form onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm text-gray-700">食材名:</label>
+            <label className="block text-sm text-gray-700">食材名<Required/></label>
             <input
               type="text"
               value={ingredNm}
@@ -101,24 +107,29 @@ export const IngredSelectForm = ({ prevScreenType, submitAction, closeIngredForm
           )}
 
           <div className="mt-4">
-            <label className="block text-sm text-gray-700">必要量:</label>
+            <label className="block text-sm text-gray-700">
+              必要量{prevScreenType === Const.PREV_SCREEN_TYPE.RECIPE_INGRED && <Required />}
+            </label>
             <input
               type="number"
               value={qty}
               onChange={(e) => setQty(e.target.value)}
               className="form-input-base"
-              required
               step="0.1"
+              required={prevScreenType === Const.PREV_SCREEN_TYPE.RECIPE_INGRED ? true : false}
             />
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm text-gray-700">単位:</label>
+            <label className="block text-sm text-gray-700">
+              単位{prevScreenType === Const.PREV_SCREEN_TYPE.RECIPE_INGRED && <Required />}
+            </label>
             {!unitDictByIngredStat.isLoading ?
               <select
                 value={unitCd}
                 onChange={(e) => setUnitCd(e.target.value)}
                 className="form-input-base"
+                required={prevScreenType === Const.PREV_SCREEN_TYPE.RECIPE_INGRED ? true : false}
               >
                 <OptionConstDict dict={unitDictByIngred}/>
               </select>
@@ -130,7 +141,7 @@ export const IngredSelectForm = ({ prevScreenType, submitAction, closeIngredForm
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm text-gray-700">売り場:</label>
+            <label className="block text-sm text-gray-700">売り場</label>
             <select
               value={salesAreaType}
               onChange={(e) => setSalesAreaType(e.target.value)}
@@ -140,7 +151,21 @@ export const IngredSelectForm = ({ prevScreenType, submitAction, closeIngredForm
               {!salesAreaDictStat.isLoading && <OptionConstDict dict={salesAreaDict} />}
             </select>
           </div>
-          <div className="flex justify-between mt-4">
+
+          {editData === undefined &&
+            <div className="mt-4">
+              <label className="text-md text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={isRegisterContinue}
+                  onChange={() => setIsRegisterContinue(!isRegisterContinue)}
+                />
+                <span className="ml-2">続けて登録</span>
+              </label>
+            </div>
+          }
+
+          <div className="flex justify-between mt-8">
             <FormCloseButton onClick={closeIngredForm} />
             <FormSubmitButton />
           </div>

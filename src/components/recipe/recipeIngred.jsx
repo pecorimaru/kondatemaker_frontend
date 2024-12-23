@@ -7,7 +7,7 @@ import { decamelizeKeys } from 'humps';
 import * as Const from '../../constants/constants.js';
 
 import { useKondateMaker } from '../global/global.jsx';
-import { useOnClick, useOnScroll } from '../../hooks/useEventHandler.js';
+import { useEventHandler } from '../../hooks/useEventHandler.js';
 import { useRecipeIngredList } from '../../hooks/useFetchData.js';
 
 import { LoadingSpinner, AddRow, ContextMenu } from '../global/common.jsx';
@@ -17,14 +17,26 @@ import { apiClient } from '../../utils/axiosClient.js';
 
 export const RecipeIngred = ({ recipe }) => {
 
-  const { user, unitDict, unitDictStat, handleContextMenu, handleTouchStart, handleTouchEnd, closeContextMenu } = useKondateMaker();
-  const { recipeIngredList, recipeIngredListStat, recipeIngredListMutate } = useRecipeIngredList(recipe?.recipeId);
-  
+  const { 
+    unitDict, 
+    unitDictStat, 
+    handleContextMenu, 
+    touchStart, 
+    touchEnd, 
+    closeContextMenu, 
+    showMessage, 
+    clearMessage,
+    setIsOpeningForm,
+  } = useKondateMaker();
+
+  const { recipeIngredList, recipeIngredListStat, recipeIngredListMutate } = useRecipeIngredList(
+    recipe.recipeIngredVisible !== null ? recipe?.recipeId : null
+  );
   const [recipeIngredListDisp, setRecipeIngredListDisp] = useState();
   const [isAddIngred, setIsAddIngred] = useState(false);
   const [isEditIngred, setIsEditIngred] = useState(false);
   const [editRecipeIngredId, setEditRecipeIngredId] = useState();
-  const [editData, setEditData] = useState();  
+  const [editData, setEditData] = useState();
 
   // データフェッチしたレシピ食材リストを表示用リストにセット
   // ・各画面で同一のキー[contextMenuVisible]を利用することでコンテキストメニューのオープン/クローズ処理を共通化
@@ -53,8 +65,8 @@ export const RecipeIngred = ({ recipe }) => {
    }, [recipeIngredList, recipeIngredListDisp, setRecipeIngredListDisp]);
 
   // 画面クリック or スクロールでコンテキストメニューをクローズ
-  useOnClick(() => closeContextMenu(switchFlgRecipeIngredAcc));
-  useOnScroll(() => closeContextMenu(switchFlgRecipeIngredAcc));
+  useEventHandler("click", () => closeContextMenu(switchFlgRecipeIngredAcc));
+  useEventHandler("scroll", () => closeContextMenu(switchFlgRecipeIngredAcc));
 
   const openAddIngredForm = () => {
     closeContextMenu(switchFlgRecipeIngredAcc);  // 親明細を持つ明細行のコンテキストは明示的にクローズしないとなぜか消えない
@@ -62,8 +74,6 @@ export const RecipeIngred = ({ recipe }) => {
   };
 
   const openEditIngredForm = (row) => {
-    console.log("row", row)
-    console.log("edit", { ingredNm: row?.ingredNm, qty: row?.qty, unitCd: row?.unitCd, salesAreaType: row?.salesAreaType })
     closeContextMenu(switchFlgRecipeIngredAcc);  // 親明細を持つ明細行明細のコンテキストは明示的にクローズしないとなぜか消えない
     setEditRecipeIngredId(row?.recipeIngredId);
     setEditData({ ingredNm: row?.ingredNm, qty: row?.qty, unitCd: row?.unitCd, salesAreaType: row?.salesAreaType });
@@ -73,9 +83,11 @@ export const RecipeIngred = ({ recipe }) => {
   const closeIngredForm = () => {
     setIsAddIngred(false);
     setIsEditIngred(false);
+    setIsOpeningForm(false);
   };
 
   const submitAddRecipeIngred = async (formData) => {
+    clearMessage();
     console.log(`レシピ食材追加 レシピID:${recipe?.recipeId} 食材名:${formData?.ingredNm} 必要量:${formData?.qty} 単位コード:${formData?.unitCd} 売り場区分${formData?.salesAreaType}`);
     try {
       const response = await apiClient.post(`${Const.ROOT_URL}/recipe/submitAddRecipeIngred`, { 
@@ -83,86 +95,84 @@ export const RecipeIngred = ({ recipe }) => {
         ingredNm: formData?.ingredNm,
         qty: formData?.qty, 
         unitCd: formData?.unitCd, 
-        userId: user?.id 
       });
       const data = await response.data;
-      if (data.statusCode === 200) {
-        console.log("登録成功", data);
+        console.log(data.message, data);
         recipeIngredListMutate([...recipeIngredList, data.newRecipeIngred]);
-      } else {
-        throw new Error(data.message);
-      }
+        setIsAddIngred(false);
     } catch (error) {
-      console.error("登録失敗", error);
-    }
-    setIsAddIngred(false);
+      showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
+    };
   };
 
   const submitEditRecipeIngred = async (formData) => {
+    clearMessage();
     console.log(`レシピ食材更新 レシピ食材ID${editRecipeIngredId} レシピID:${recipe?.recipeId} 食材名:${formData?.ingredNm} 必要量:${formData?.qty} 単位コード:${formData?.unitCd} 売り場区分${formData?.salesAreaType}`);
-      try {
-        const response = await apiClient.put(`${Const.ROOT_URL}/recipe/submitEditRecipeIngred`, { 
-          recipeIngredId: editRecipeIngredId,
-          ingredNm: formData?.ingredNm,
-          qty: formData?.qty, 
-          unitCd: formData?.unitCd,
-          userId: user?.id
-        });
-        const data = await response.data;
-        if (data.statusCode === 200) {
-          console.log("更新成功", data);
-          recipeIngredListMutate(recipeIngredList.map((item) => (
-            item?.recipeIngredId === editRecipeIngredId ? data.newRecipeIngred : item
-          )));
-
-        } else {
-          throw new Error(data.message);
-        }
-      } catch (error) {
-        console.error("更新失敗", error);
-      }        
-    setIsEditIngred (false);
+    try {
+      const response = await apiClient.put(`${Const.ROOT_URL}/recipe/submitEditRecipeIngred`, { 
+        recipeIngredId: editRecipeIngredId,
+        ingredNm: formData?.ingredNm,
+        qty: formData?.qty, 
+        unitCd: formData?.unitCd,
+      });
+      const data = await response.data;
+      console.log("更新成功", data);
+      recipeIngredListMutate(recipeIngredList.map((item) => (
+        item?.recipeIngredId === editRecipeIngredId ? data.newRecipeIngred : item
+      )));
+      setIsEditIngred (false);
+    } catch (error) {
+      showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
+    };        
   };
 
   const submitDeleteRecipeIngred = async (row) => {
+    clearMessage();
     const deleteable = window.confirm("食材を削除します。\nよろしいですか？");
-    if (deleteable) {
-      const queryParams = new URLSearchParams(decamelizeKeys({ recipeIngredId: row?.recipeIngredId })).toString();
-      try {
-        const response = await apiClient.delete(`${Const.ROOT_URL}/recipe/submitDeleteRecipeIngred/query_params?${queryParams}`);
-        const data = await response.data;
-        if (data.statusCode === 200) {
-          console.log("削除成功", data);
-          recipeIngredListMutate(recipeIngredList.filter((item) => item.recipeIngredId !== row.recipeIngredId));
-        } else {
-          throw new Error(data.message);
-        }
-      } catch (error) {
-        console.error("削除失敗", error);
-      }        
+    if (!deleteable) {
+      return;
     }
+    const queryParams = new URLSearchParams(decamelizeKeys({ recipeIngredId: row?.recipeIngredId })).toString();
+    try {
+      const response = await apiClient.delete(`${Const.ROOT_URL}/recipe/submitDeleteRecipeIngred/query_params?${queryParams}`);
+      const data = await response.data;
+      console.log(data.message, data);
+      recipeIngredListMutate(recipeIngredList.filter((item) => item.recipeIngredId !== row.recipeIngredId));
+    } catch (error) {
+      showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
+    };
     closeContextMenu(switchFlgRecipeIngredAcc);
   };
 
+
   if (recipeIngredListStat.isLoading) {
     return (
-      <tr className="flex justify-end">
-        <td className="w-53 py-2"><LoadingSpinner /></td>
-      </tr>
+      <>
+        {recipe.recipeIngredVisible && 
+          <tr className="flex justify-end">
+            <td className="w-53 py-2"><LoadingSpinner /></td>
+          </tr>
+        }
+      </>
     )
   };
 
   return (
     <tr>
       <td>
-        <table className="flex justify-end">
-          <tbody>
+        <table className="flex justify-end overflow-hidden">
+          <tbody
+            style={{
+              height: `${recipe.recipeIngredVisible ? recipeIngredList?.length * 44 + 48 : 0}px`,
+              transition: 'height 0.3s ease',
+            }}
+          >
             {recipeIngredListDisp?.map((row, index) => 
               <tr 
                 key={row.recipeIngredId} 
                 onContextMenu={(event) => handleContextMenu(event, index, switchFlgRecipeIngredAcc)}
-                onTouchStart={(event) => handleTouchStart(event, index, switchFlgRecipeIngredAcc)} 
-                onTouchEnd={handleTouchEnd} 
+                onTouchStart={(event) => touchStart(event, index, switchFlgRecipeIngredAcc)} 
+                onTouchEnd={touchEnd} 
                 className="detail-table-row"
               >
                 <td className="detail-table-data bg-white w-36">

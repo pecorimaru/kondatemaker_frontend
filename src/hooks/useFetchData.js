@@ -20,10 +20,6 @@ export function useFetchData(key, params) {
   } else if (Object.keys(params).length === 0) {
     fetchUrl = `${Const.ROOT_URL}/${key}`;
   } else {
-    // const formattedParams = Object.entries(params)
-    // .map(([key, value]) => `${key}=${value}`)
-    // .join(' ');
-    // console.log(`fetch ${key} params=${formattedParams}`);
     const queryParams = new URLSearchParams(params).toString();
     fetchUrl = `${Const.ROOT_URL}/${key}/queryParams?${queryParams}`;
   }
@@ -50,38 +46,58 @@ export function useWeekdayDict() {
   return { weekdayDict: data, weekdayDictStat: { error, isLoading } };
 };
 
-export function useIngredList(userId) {
-  const { data, error, isLoading, mutate } = useFetchData("ingred/ingredList", decamelizeKeys({ userId }));
+export function useLoginUser(isLoggedIn) {
+  const { data, error, isLoading, mutate } = useFetchData("setting/loginUser", decamelizeKeys({ isLoggedIn }));
+  return { loginUser: data, loginUserStat: { error, isLoading }, loginUserMutate: mutate };  
+}
+
+export function useCurrentGroup(isLoggedIn) {
+  const { data, error, isLoading, mutate } = useFetchData("setting/currentGroup", decamelizeKeys({ isLoggedIn }));
+  return { currentGroup: data, currentGroupStat: { error, isLoading }, currentGroupMutate: mutate };  
+}
+
+export function useGroupList() {
+  const { data, error, isLoading, mutate } = useFetchData("setting/groupList", {});
+  return { groupList: data, groupListStat: { error, isLoading }, groupListMutate: mutate };
+};
+
+export function useGroupMemberList() {
+  const { data, error, isLoading, mutate } = useFetchData("setting/groupMemberList", {});
+  return { groupMemberList: data, groupMemberListStat: { error, isLoading }, groupMemberListMutate: mutate };
+};
+
+export function useIngredList() {
+  const { data, error, isLoading, mutate } = useFetchData("ingred/ingredList", {});
   return { ingredList: data, ingredListStat: { error, isLoading }, ingredListMutate: mutate };
 };
 
-export function useIngredUnitConvList(ingredId, userId) {
-  const { data, error, isLoading, mutate } = useFetchData("ingred/ingredUnitConvList", decamelizeKeys({ ingredId, userId }));
+export function useIngredUnitConvList(ingredId) {
+  const { data, error, isLoading, mutate } = useFetchData("ingred/ingredUnitConvList", decamelizeKeys({ ingredId }));
   return { ingredUnitConvList: data, ingredUnitConvListStat: { error, isLoading }, ingredUnitConvListMutate: mutate };
 };
 
-export function useIngredNmSuggestions(inputValue, userId) {
-  const { data, error, isLoading } = useFetchData("ingredForm/ingredNmSuggestions", decamelizeKeys({ inputValue, userId }));
+export function useIngredNmSuggestions(inputValue) {
+  const { data, error, isLoading } = useFetchData("ingredForm/ingredNmSuggestions", decamelizeKeys({ inputValue }));
   return { ingredNmSuggestions: data, ingredNmSuggestionsStat: { error, isLoading } };
 };
 
-export function useDefaultSetsByIngred(ingredNm, userId) {
-  const { data, error, isLoading } = useFetchData("ingredForm/defaultSetsByIngred", decamelizeKeys({ ingredNm, userId }));
+export function useDefaultSetsByIngred(ingredNm) {
+  const { data, error, isLoading } = useFetchData("ingredForm/defaultSetsByIngred", decamelizeKeys({ ingredNm }));
   return { defaultSetsByIngred: data, defaultSetsByIngredStat: { error, isLoading } };
 };
 
-export function useUnitDictByIngred(ingredNm, userId) {
-  const { data, error, isLoading } = useFetchData("ingredForm/unitDictByIngred", decamelizeKeys({ ingredNm, userId }));
+export function useUnitDictByIngred(ingredNm) {
+  const { data, error, isLoading } = useFetchData("ingredForm/unitDictByIngred", decamelizeKeys({ ingredNm }));
   return { unitDictByIngred: data, unitDictByIngredStat: { error, isLoading } };
 };
 
-export function useRecipeList(userId) {
-  const { data, error, isLoading, mutate } = useFetchData("recipe/recipeList", decamelizeKeys({ userId }));
+export function useRecipeList() {
+  const { data, error, isLoading, mutate } = useFetchData("recipe/recipeList", {});
   return { recipeList: data, recipeListStat: { error, isLoading }, recipeListMutate: mutate };
 };
 
-export function useRecipeNmSuggestions(inputValue, userId) {
-  const { data, error, isLoading } = useFetchData("recipeForm/recipeNmSuggestions", decamelizeKeys({ inputValue, userId }));
+export function useRecipeNmSuggestions(inputValue) {
+  const { data, error, isLoading } = useFetchData("recipeForm/recipeNmSuggestions", decamelizeKeys({ inputValue }));
   return { recipeNmSuggestions: data, recipeNmSuggestionsStat: { error, isLoading } };
 };
 
@@ -90,8 +106,8 @@ export function useRecipeIngredList(recipeId) {
   return { recipeIngredList: data, recipeIngredListStat: { error, isLoading } , recipeIngredListMutate: mutate};
 };
 
-export function useMenuPlanList(userId) {
-    const { data, error, isLoading, mutate } = useFetchData("menuPlan/menuPlanList", decamelizeKeys({ userId }));
+export function useMenuPlanList() {
+    const { data, error, isLoading, mutate } = useFetchData("menuPlan/menuPlanList", {});
     return { menuPlanList: data, menuPlanListStat: { error, isLoading }, menuPlanListMutate: mutate };
   };
 
@@ -100,18 +116,18 @@ export function useMenuPlanDetList(menuPlanId) {
   return { menuPlanDetList: data, menuPlanDetListStat: { error, isLoading }, menuPlanDetListMutate: mutate };
   };
 
-export function useSelectedPlan(userId) {
-  const { data, error, isLoading, mutate } = useFetchData("home/slectedPlan", decamelizeKeys({ userId }));
+export function useSelectedPlan() {
+  const { data, error, isLoading, mutate } = useFetchData("home/slectedPlan", {});
   return { selectedPlan: data, selectedPlanStat: { error, isLoading }, selectedPlanMutate: mutate };
 };
 
-export function useToweekMenuPlanDetListDict(userId) {
-const { data, error, isLoading, mutate } = useFetchData("home/toweekMenuPlanDetListDict", decamelizeKeys({ userId }));
+export function useToweekMenuPlanDetListDict() {
+const { data, error, isLoading, mutate } = useFetchData("home/toweekMenuPlanDetListDict", {});
 return { toweekMenuPlanDetListDict: data, toweekMenuPlanDetListDictStat: { error, isLoading }, toweekMenuPlanDetListDictMutate: mutate };
 };
 
-export function useBuyIngredList(userId) {
-const { data, error, isLoading, mutate } = useFetchData("buy/buyIngredList", decamelizeKeys({ userId }));
+export function useBuyIngredList() {
+const { data, error, isLoading, mutate } = useFetchData("buy/buyIngredList", {});
 return { buyIngredList: data, buyIngredListStat: { error, isLoading }, buyIngredListMutate: mutate };
 };
 

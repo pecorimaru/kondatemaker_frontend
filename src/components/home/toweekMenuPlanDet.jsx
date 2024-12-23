@@ -2,13 +2,12 @@ import '../../css/styles.css';
 import '../../css/output.css';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import axios from 'axios';
 
 import * as Const from '../../constants/constants.js';
 
 import { useRecipeNmSuggestions } from '../../hooks/useFetchData.js';
 import { useKondateMaker } from '../global/global.jsx';
-import { useEventHandler, useOnClick, useOnScroll } from '../../hooks/useEventHandler.js';
+import { useEventHandler } from '../../hooks/useEventHandler.js';
 
 import { ContextMenu, LoadingSpinner, SuggestionsInput } from '../global/common.jsx';
 import { apiClient } from '../../utils/axiosClient.js';
@@ -16,23 +15,21 @@ import { decamelizeKeys } from 'humps';
 
 
 function getEditingToweekMenuPlanDet(toweekMenuPlanDetListDisp) {
-  const toweekMenuPlanDet = toweekMenuPlanDetListDisp.filter((item) => item.isEditing == true);
+  const toweekMenuPlanDet = toweekMenuPlanDetListDisp.filter((item) => item.isEditing);
   return toweekMenuPlanDet ? toweekMenuPlanDet[0] : undefined;
 };
 
 export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, toweekMenuPlanDetListDictMutate, isRefreshing }) => {
 
-  const { user, handleContextMenu, handleTouchStart, handleTouchEnd, closeContextMenu } = useKondateMaker();
+  const { handleContextMenu, touchStart, touchEnd, closeContextMenu, showMessage, clearMessage } = useKondateMaker();
   const [toweekMenuPlanDetListDisp, setToweekMenuPlanDetListDisp] = useState();
 
-  const [recipeNm, setRecipeNm] = useState("")                   // 未定時の値セット用
   const [befRecipeNm, setBefRecipeNm] = useState("");            // 更新チェック用（編集によって値が変わった場合のみ、データ更新）
   const [recipeNmEditing, setRecipeNmEditing] = useState("");    // 対象明細の入力候補を表示するために使用
   const [isEditing, setIsEditing] = useState(false);             // 明細ごとの編集フラグ変更時にフォーカスするためのフラグ
   const recipeNmRef = useRef(null);
   const recipeNmSuggestionsRef = useRef(null);
-
-  const { recipeNmSuggestions, recipeNmSuggestionsStat } = useRecipeNmSuggestions(recipeNmEditing, user?.id);
+  const { recipeNmSuggestions } = useRecipeNmSuggestions(recipeNmEditing);
 
   
   // 献立プラン明細リストを表示用リストにセット
@@ -48,7 +45,7 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
         }))
       );
     };
-  }, [toweekMenuPlanDetListDictDisp, setToweekMenuPlanDetListDisp]);
+  }, [toweekMenuPlanDetListDictDisp, setToweekMenuPlanDetListDisp, weekdayCd]);
 
   // 表示用リストで定義したフラグのスイッチング処理
   const flg = { 
@@ -57,7 +54,6 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
     isAlert: "isAlert",
   };
   const switchFlgToweekMenuPlanAcc = useCallback((updIndex, key, flg, isAll=false) => {
-    // console.log(`updIndex:${updIndex} key:${key} flg:${flg} isAll:${isAll}`);
     if (toweekMenuPlanDetListDictDisp && toweekMenuPlanDetListDisp) {
       setToweekMenuPlanDetListDisp(
         toweekMenuPlanDetListDisp?.map((item, index) => ({
@@ -69,15 +65,11 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
   }, [toweekMenuPlanDetListDictDisp, toweekMenuPlanDetListDisp, setToweekMenuPlanDetListDisp]);
   
   // 画面クリック or スクロールでコンテキストメニューをクローズ
-  useOnClick(() => closeContextMenu(switchFlgToweekMenuPlanAcc));
-  useOnScroll(() => closeContextMenu(switchFlgToweekMenuPlanAcc));
+  useEventHandler("click", () => closeContextMenu(switchFlgToweekMenuPlanAcc));
+  useEventHandler("scroll", () => closeContextMenu(switchFlgToweekMenuPlanAcc));
   
   // 編集時に対象項目にフォーカス
-  useEffect(() => {
-    if (isEditing && recipeNmRef.current) {
-      recipeNmRef.current.focus();
-    };
-  }, [isEditing]);
+  useEffect(() => {if (isEditing && recipeNmRef.current) {recipeNmRef.current.focus()}}, [isEditing]);
 
   const handleEditClick = (row, index) => {
     switchFlgToweekMenuPlanAcc(index, flg.isEditing, true);
@@ -89,7 +81,6 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
   const handleAddRecipeNmChange = (e) => {
     e.preventDefault();
     const changedRecipeNm = e.target.value;
-    // setRecipeNm(changedRecipeNm)
     setRecipeNmEditing(changedRecipeNm);    
   };
 
@@ -108,19 +99,27 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
   // 入力候補 or 対象項目以外を押下した場合に入力候補エリアを非表示
   const handleClickOutside = (e) => {
   
+    // 編集中ではない場合
     if (!isEditing) {
       return;
     };
 
-    if ((recipeNmSuggestionsRef?.current?.contains(e.target)) || (recipeNmRef?.current?.contains(e.target))) {
+    // 編集中の項目もしくは入力候補を押下した場合
+    if (((recipeNmRef?.current?.contains(e.target)) || recipeNmSuggestionsRef?.current?.contains(e.target))) {
       return;
     };
 
+    // 編集中の献立明細を取得（新規追加の場合はundifined）
     const editToweekMenuPlanDet = getEditingToweekMenuPlanDet(toweekMenuPlanDetListDisp);
-    const recipeNmExist = recipeNmSuggestions?.includes(recipeNmEditing)
 
+    // 編集したレシピ名が入力候補に存在
+    const recipeNmExists = recipeNmSuggestions?.includes(recipeNmEditing)
+
+    // 編集したレシピ名が空白ではない場合
     if (recipeNmEditing) {
-      if (recipeNmExist) {
+      // 編集したレシピが存在する場合
+      if (recipeNmExists) {
+        // 新規 or 更新
         if (editToweekMenuPlanDet) {      
           submitEditToweekMenuPlanDet(recipeNmEditing);
         } else {
@@ -128,6 +127,7 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
         };
       };
     } else {
+      // 編集によって空白にした場合は既存のレシピを削除
       if(befRecipeNm) {
         submitDeleteToweekMenuPlanDet(editToweekMenuPlanDet);
       };
@@ -136,7 +136,7 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
       toweekMenuPlanDetListDisp?.map((item) => ({
         ...item,
         isEditing: item.isEditing ? false : item.isEditing,
-        isAlert: item.isEditing ? recipeNmEditing && !recipeNmExist : item.isAlert,
+        isAlert: item.isEditing ? recipeNmEditing && !recipeNmExists : item.isAlert,
       }))
     );
     setIsEditing(false);
@@ -144,7 +144,7 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
   };
   useEventHandler("mousedown", handleClickOutside);
 
-
+  // 入力候補押下時（編集時）
   const handleEditSuggestionClick = (suggestion, row) => {
     submitEditToweekMenuPlanDet(suggestion);
     // 一度に複数の要素を更新するため、switchFlgToweekMenuPlanAccは使用しない
@@ -160,6 +160,7 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
     setBefRecipeNm("");
   };
 
+  // 入力候補押下時（新規登録時）
   const handleAddSuggestionClick = (suggestion) => {
     submitAddToweekMenuPlanDet(suggestion);
     setIsEditing(false);
@@ -167,82 +168,65 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
 
 
   const submitAddToweekMenuPlanDet = async (recipeNm) => {
-
     const addable = window.confirm("追加内容を買い物リストに反映します。\nよろしいですか？");
     if (!addable) {
       return;
     };
-
+    clearMessage();
     console.log(`今週献立明細追加 レシピ名:${recipeNm}`);
     try {
       const response = await apiClient.post(`${Const.ROOT_URL}/home/submitAddToweekMenuPlanDet`, { 
         recipeNm: recipeNm,
         weekdayCd: weekdayCd,
-        userId: user?.id 
       });
       const data = await response.data;
-      if (data.statusCode === 200) {
-        console.log("更新成功", data);
-      } else {
-        throw new Error(data.message);
-      };
+      console.log(data.message, data);
+      toweekMenuPlanDetListDictMutate();
     } catch (error) {
-      console.error("更新失敗", error);
+      showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };
     setRecipeNmEditing("");
   };
 
   const submitEditToweekMenuPlanDet = async (recipeNm) => {
-
     if (recipeNmEditing === befRecipeNm) {
       return;
-    }
-
+    };
     const editable = window.confirm("更新内容を買い物リストに反映します。\nよろしいですか？");
     if (!editable) {
       return;
     };
-
+    clearMessage();
     const editMenuPlanDet = getEditingToweekMenuPlanDet(toweekMenuPlanDetListDisp);
     console.log(`今週献立明細編集 今週献立明細ID:${editMenuPlanDet.toweekMenuPlanDetId} レシピ名:${recipeNm}`);
     try {
       const response = await apiClient.put(`${Const.ROOT_URL}/home/submitEditToweekMenuPlanDet`, { 
         toweekMenuPlanDetId: editMenuPlanDet.toweekMenuPlanDetId,
         recipeNm: recipeNm,
-        userId: user?.id 
       });
       const data = await response.data;
-      if (data.statusCode === 200) {
-        console.log("更新成功", data);
-      } else {
-        throw new Error(data.message);
-      };
+      console.log(data.message, data);
     } catch (error) {
-      console.error("更新失敗", error);
+      showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };
     setRecipeNmEditing("");
   };
 
 
   const submitDeleteToweekMenuPlanDet = async (row) => {
-
     const deleteable = window.confirm("献立明細を削除します。\nよろしいですか？");
     if (!deleteable) {
       return;
     };
-
-    const queryParams = new URLSearchParams(decamelizeKeys({ toweekMenuPlanDetId: row?.toweekMenuPlanDetId, userId: user?.id })).toString();
+    clearMessage();
+    const queryParams = new URLSearchParams(decamelizeKeys({ toweekMenuPlanDetId: row?.toweekMenuPlanDetId })).toString();
     try {
       const response = await apiClient.delete(`${Const.ROOT_URL}/home/submitDeleteToweekMenuPlanDet/query_params?${queryParams}`);
       const data = await response.data;
-      if (data.statusCode === 200) {
-        console.log("削除成功", data);
-        toweekMenuPlanDetListDictMutate();
-      } else {
-        throw new Error(data.message);
-      }
+      console.log(data.message, data);
+      toweekMenuPlanDetListDictMutate();
     } catch (error) {
-      console.error("削除失敗", error);
+      showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     }        
     closeContextMenu(switchFlgToweekMenuPlanAcc);
     setRecipeNmEditing("");
@@ -293,8 +277,8 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
               key={index} 
               className={`bg-white ${index > 0 && "mt-1.5"}`}  // １つの曜日に複数のレシピがある場合のみ、mt-1.5を指定
               onContextMenu={(e) => handleContextMenu(e, index, switchFlgToweekMenuPlanAcc)}
-              onTouchStart={(e) => handleTouchStart(e, index, switchFlgToweekMenuPlanAcc)} 
-              onTouchEnd={handleTouchEnd} 
+              onTouchStart={(e) => touchStart(e, index, switchFlgToweekMenuPlanAcc)} 
+              onTouchEnd={touchEnd} 
             >
               {row?.isEditing ?
                 <>
