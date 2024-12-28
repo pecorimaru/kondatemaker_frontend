@@ -22,6 +22,7 @@ export function useFetchData(key, params) {
   } else {
     const queryParams = new URLSearchParams(params).toString();
     fetchUrl = `${Const.ROOT_URL}/${key}/queryParams?${queryParams}`;
+    console.log("fetchUrl", fetchUrl);
   }
   return useSWR(fetchUrl, fetcher);
 };

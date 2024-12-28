@@ -1,13 +1,10 @@
-import axios from 'axios';
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import * as Const from '../../constants/constants.js';
 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from '../../utils/axiosClient.js';
 import { decamelizeKeys } from 'humps';
-
-import { useKondateMaker } from '../global/global.jsx';
 import { LoadingSpinner } from "../global/common.jsx";
 
 export const JoinGroup = () => {
@@ -18,12 +15,8 @@ export const JoinGroup = () => {
   const [isDone, setIsDone] = useState(false);
   const [message, setMessage] = useState("")
   const navigate = useNavigate();
-  
-  useEffect(() => {
-    submitJoinGroup();
-  }, []);
 
-  const submitJoinGroup = async () => {
+  const submitJoinGroup = useCallback(async () => {
     if (!token) {
       setStatus("error");
       return;
@@ -42,7 +35,11 @@ export const JoinGroup = () => {
     } finally {
       setIsDone(true);
     }
-  };
+  }, [token, isDone]);
+
+  useEffect(() => {
+    submitJoinGroup();
+  }, [submitJoinGroup]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

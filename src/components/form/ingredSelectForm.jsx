@@ -50,6 +50,13 @@ export const IngredSelectForm = ({ prevScreenType, submitAction, closeIngredForm
     };
   }, [defaultSetsByIngred, defaultSetsByIngredStat, isIngredNmChanged]);
 
+  const clearForm = () => {
+    setIngredNm("");
+    setQty("");
+    setUnitCd(Object.keys(unitDictByIngred)[0]);
+    setSalesAreaType(Object.keys(salesAreaDict)[0]);
+  }
+
   const handleIngredNmChange = (e) => {
     e.preventDefault();
     setIngredNm(e.target.value);
@@ -60,9 +67,7 @@ export const IngredSelectForm = ({ prevScreenType, submitAction, closeIngredForm
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("isRegisterContinue", isRegisterContinue)
-    submitAction({ ingredNm, qty, unitCd, salesAreaType, isRegisterContinue });
-    setIngredNm("");
-    setQty("");
+    submitAction({ ingredNm, qty, unitCd, salesAreaType, isRegisterContinue }, clearForm);
   };
 
   const handleKeyDown = (e) => {

@@ -22,13 +22,18 @@ export const Recipe = () => {
   const { 
     recipeTypeDict, 
     recipeTypeDictStat, 
-    handleContextMenu, 
     touchStart, 
     touchEnd, 
-    closeContextMenu, 
     showMessage, 
     clearMessage,
     setIsOpeningForm, 
+    openContextMenu,
+    closeContextMenu,
+    contextMenuIndex,
+    hoveredIndex,
+    applyHovered,
+    setApplyHovered,
+    hoveredRowSetting,
   } = useKondateMaker();
 
   const { recipeList, recipeListStat, recipeListMutate } = useRecipeList();
@@ -37,18 +42,15 @@ export const Recipe = () => {
   const [isEditRecipe, setIsEditRecipe] = useState(false);
   const [editRecipeId, setEditRecipeId] = useState();
   const [editData, setEditData] = useState({ recipeNm: null, recipeNmK: null, recipeType: null, recipeUrl: null });
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [applyHovered, setApplyHovered] = useState(false);
+  
 
   // データフェッチしたレシピリストを表示用リストにセット
-  // ・各画面で同一のキー[contextMenuVisible]を利用することでコンテキストメニューのオープン/クローズ処理を共通化
   useEffect(() => {
     if (!recipeListStat.isLoading) {
       setRecipeListDisp(
         recipeList
         ?.map((item) => ({
           ...item,
-          contextMenuVisible: false,
           recipeIngredVisible: null,  // 初期表示でアニメーションを実行させないためにnullをセット
         }))
       );
@@ -58,6 +60,8 @@ export const Recipe = () => {
   // 表示用リストで定義したフラグのスイッチング処理
   const flg = { recipeIngredVisible: "recipeIngredVisible"};
   const switchFlgRecipeAcc = useCallback((updIndex, key, flg, isAll=false) => {
+    console.log(`switchFlgRecipeAcc`, `updIndex:${updIndex} key:${key} flg:${flg} isAll:${isAll}`)
+    console.log("recipeListDisp", recipeListDisp);
     if (recipeList && recipeListDisp) {
       setRecipeListDisp(
         recipeListDisp?.map((item, index) => ({
@@ -69,28 +73,8 @@ export const Recipe = () => {
   }, [recipeList, recipeListDisp, setRecipeListDisp]);
 
   // 画面クリック or スクロールでコンテキストメニューをクローズ
-  useEventHandler("click", () => closeContextMenu(switchFlgRecipeAcc));
-  useEventHandler("scroll", () => closeContextMenu(switchFlgRecipeAcc));
-
-  const handleTouchStart = (e, index) => {
-    if (index === hoveredIndex) {
-      setApplyHovered(!applyHovered);
-    } else {
-      setHoveredIndex(index);
-      setApplyHovered(true);
-    };
-    touchStart(e, index, switchFlgRecipeAcc);
-  }
-
-  const handleTouchEnd = (index) => {
-    if (recipeListDisp[index]?.["contextMenuVisible"]) {setApplyHovered(true)};
-    touchEnd();
-  };
-
-  const handleMouseEnter = (index) => {
-    setHoveredIndex(index);
-    setApplyHovered(true)
-  }
+  useEventHandler("click", () => closeContextMenu());
+  useEventHandler("scroll", () => closeContextMenu());
 
   const openAddRecipeForm = () => {
     setIsAddRecipe(true);
@@ -122,7 +106,7 @@ export const Recipe = () => {
       const data = await response.data;
       console.log(data.message, data);
       recipeListMutate([...recipeList, data.newRecipe]);
-      setIsAddRecipe(false);
+      closeRecipeForm();
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };
@@ -141,10 +125,10 @@ export const Recipe = () => {
       });
       const data = await response.data;
       console.log(data.message, data);
-      recipeListMutate(recipeList?.map((item) => (
-        item.recipeId === data.newRecipe.recipeId ? data.newRecipe : item
-      )));
-      setIsEditRecipe(false);
+      recipeListMutate(
+        recipeList?.map((item) => (item.recipeId === data.newRecipe.recipeId ? data.newRecipe : item)
+      ));
+      closeRecipeForm();
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };
@@ -162,7 +146,6 @@ export const Recipe = () => {
       const data = await response.data;
       console.log(data.message, data);
       recipeListMutate(recipeList?.filter((item) => (item.recipeId !== row?.recipeId)));
-      closeContextMenu(switchFlgRecipeAcc);
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };
@@ -186,10 +169,10 @@ export const Recipe = () => {
                 // レイアウトが崩れるため、<tbody>で返却する
                 <tbody key={row?.recipeId}>
                   <tr  
-                    onContextMenu={(e) => handleContextMenu(e, index, switchFlgRecipeAcc)}
-                    onTouchStart={(e) => handleTouchStart(e, index)} 
-                    onTouchEnd={() => handleTouchEnd(index)} 
-                    onMouseEnter={() => handleMouseEnter(index)}
+                    onContextMenu={(e) => openContextMenu(e, index)}
+                    onTouchStart={(e) => touchStart(e, index)} 
+                    onTouchEnd={() => touchEnd(index)} 
+                    onMouseEnter={() => hoveredRowSetting(index)}
                     onMouseLeave={() => setApplyHovered(false)}
                     className={`detail-table-row ${(applyHovered && index === hoveredIndex) && "group"}`}
                   >
@@ -207,7 +190,7 @@ export const Recipe = () => {
                       {!recipeTypeDictStat.isLoading ? recipeTypeDict[row?.recipeType] : <LoadingSpinner />}
                       {/* 個別にtdタグで配置すると[detail-table-row]定義した[gap-1]によって余分な間隔が発生するため
                           onClickイベントが無いtdタグに混在させることで回避。 */}
-                      {row?.contextMenuVisible && 
+                      {(index === contextMenuIndex) &&
                         <ContextMenu menuList={[
                           {textContent: "編集", onClick: () => openEditRecipeForm(row, index)},
                           {textContent: "削除", onClick: () => submitDeleteRecipe(row, index)},

@@ -2,7 +2,7 @@ import './css/styles.css';
 import './css/output.css';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Footer } from './components/global/footer';
-import { useKondateMaker } from './components/global/global';
+import { MemoizedHeader, useKondateMaker } from './components/global/global';
 import { Home } from './components/home/home';
 import { Buy } from './components/buy/buy';
 import { Login } from './components/login/login';
@@ -27,7 +27,7 @@ export const  KondateMaker = () => {
       <div className="bg-slate-100 h-screen font-sans">
           <Router>
             
-            <Header />
+            <MemoizedHeader />
             <Routes>
               <Route exact path="/" element={<Login/>} />
               <Route exact path="/resetPassword" element={<ResetPassword/>} />

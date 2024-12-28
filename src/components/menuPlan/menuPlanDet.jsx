@@ -21,10 +21,16 @@ export const MenuPlanDet = ({ menuPlan }) => {
     handleContextMenu, 
     touchStart, 
     touchEnd,
-    closeContextMenu, 
     showMessage, 
     clearMessage,
     setIsOpeningForm,
+    openContextMenu,
+    closeContextMenu,
+    contextMenuIndex,
+    hoveredIndex,
+    applyHovered,
+    setApplyHovered,
+    hoveredRowSetting,
   } = useKondateMaker();
   
   const { menuPlanDetList, menuPlanDetListStat, menuPlanDetListMutate } = useMenuPlanDetList(
@@ -35,36 +41,36 @@ export const MenuPlanDet = ({ menuPlan }) => {
   const [isEditMenuPlanDet, setIsEditMenuPlanDet] = useState(false);
   const [editMenuPlanDetId, setEditMenuPlanDetId] = useState(null);
   const [editData, setEditData] = useState();
+  // const [hoveredIndex, setHoveredIndex] = useState(null);
+  // const [applyHovered, setApplyHovered] = useState(false);
   
   // データフェッチした献立プラン明細リストを表示用リストにセット
-  // ・各画面で同一のキー[contextMenuVisible]を利用することでコンテキストメニューのオープン/クローズ処理を共通化
   useEffect(() => {
     if (!menuPlanDetListStat.isLoading) {
       setMenuPlanDetListDisp(
         menuPlanDetList?.map((item) => ({
           ...item,
-          contextMenuVisible: false,
         }))
       );
     }
   }, [menuPlanDetList, menuPlanDetListStat.isLoading]);
 
-  // 表示用リストで定義したフラグのスイッチング処理
-  const switchFlgMenuPlanDetAcc = useCallback((updIndex, key, flg, isAll=false) => {
-    // console.log(`updIndex:${updIndex} key:${key} flg:${flg} isAll:${isAll}`);
-    if (menuPlanDetList && menuPlanDetListDisp) {
-      setMenuPlanDetListDisp(
-        menuPlanDetListDisp?.map((item, index) => ({
-          ...item,
-          [key]: isAll || index === updIndex ? flg : menuPlanDetListDisp[index]?.[key],
-        }))
-      );    
-    };
-  }, [menuPlanDetList, menuPlanDetListDisp, setMenuPlanDetListDisp]);
+  // // 表示用リストで定義したフラグのスイッチング処理
+  // const switchFlgMenuPlanDetAcc = useCallback((updIndex, key, flg, isAll=false) => {
+  //   // console.log(`updIndex:${updIndex} key:${key} flg:${flg} isAll:${isAll}`);
+  //   if (menuPlanDetList && menuPlanDetListDisp) {
+  //     setMenuPlanDetListDisp(
+  //       menuPlanDetListDisp?.map((item, index) => ({
+  //         ...item,
+  //         [key]: isAll || index === updIndex ? flg : menuPlanDetListDisp[index]?.[key],
+  //       }))
+  //     );    
+  //   };
+  // }, [menuPlanDetList, menuPlanDetListDisp, setMenuPlanDetListDisp]);
 
   // 画面クリック or スクロールでコンテキストメニューをクローズ
-  useEventHandler("click", () => closeContextMenu(switchFlgMenuPlanDetAcc));
-  useEventHandler("scroll", () => closeContextMenu(switchFlgMenuPlanDetAcc));
+  useEventHandler("click", () => closeContextMenu());
+  useEventHandler("scroll", () => closeContextMenu());
 
   const submitAddMenuPlanDet = async (formData) => {
     clearMessage();
@@ -85,13 +91,13 @@ export const MenuPlanDet = ({ menuPlan }) => {
   };
 
   const openAddMenuPlanDetForm = () => {
-    closeContextMenu(switchFlgMenuPlanDetAcc);    // 親明細を持つ明細行のコンテキストは明示的にクローズしないとなぜか消えない
+    // closeContextMenu(switchFlgMenuPlanDetAcc);    // 親明細を持つ明細行のコンテキストは明示的にクローズしないとなぜか消えない
     setIsAddMenuPlanDet(true);
   };
 
   const openEditMenuPlanDetForm = (row) => {
     console.log("editData", { weekdayCd: row?.weekdayCd, recipeNm: row?.recipeNm })
-    closeContextMenu(switchFlgMenuPlanDetAcc);    // 親明細を持つ明細行のコンテキストは明示的にクローズしないとなぜか消えない
+    // closeContextMenu(switchFlgMenuPlanDetAcc);    // 親明細を持つ明細行のコンテキストは明示的にクローズしないとなぜか消えない
     setEditMenuPlanDetId(row?.menuPlanDetId);
     setEditData({ weekdayCd: row?.weekdayCd, recipeNm: row?.recipeNm });
     setIsEditMenuPlanDet(true);
@@ -130,6 +136,7 @@ export const MenuPlanDet = ({ menuPlan }) => {
       return;
     };
     clearMessage();
+    setApplyHovered(false);
     const queryParams = new URLSearchParams(decamelizeKeys({ menuPlanDetId: row?.menuPlanDetId })).toString();
     try {
       const response = await apiClient.delete(`${Const.ROOT_URL}/menuPlan/submitDeleteMenuPlanDet/query_params?${queryParams}`);
@@ -139,7 +146,6 @@ export const MenuPlanDet = ({ menuPlan }) => {
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };
-    closeContextMenu(switchFlgMenuPlanDetAcc);
   };
 
   if (menuPlanDetListStat.isLoading) {
@@ -169,19 +175,21 @@ export const MenuPlanDet = ({ menuPlan }) => {
             {menuPlanDetListDisp?.map((row, index) =>             
               <tr 
                 key={row.menuPlanDetId} 
-                onContextMenu={(event) => handleContextMenu(event, index, switchFlgMenuPlanDetAcc)}
-                onTouchStart={(event) => touchStart(event, index, switchFlgMenuPlanDetAcc)} 
-                onTouchEnd={touchEnd} 
-                className="detail-table-row"
+                onContextMenu={(e) => openContextMenu(e, index)}
+                onTouchStart={(e) => touchStart(e, index)} 
+                onTouchEnd={() => touchEnd()} 
+                onMouseEnter={() => hoveredRowSetting(index)}
+                onMouseLeave={() => setApplyHovered(false)}
+                className={`detail-table-row ${(applyHovered && index === hoveredIndex) && "group"}`}
               >
                 <td className={`detail-table-data w-16 ${Const.DAYWISE_ITEMS[row.weekdayCd]?.bgColor}`}>
                   {!weekdayDictStat.isLoading ? weekdayDict[row.weekdayCd] : <LoadingSpinner />}
                 </td>
-                <td className="detail-table-data bg-white w-44">
+                <td className="detail-table-data bg-white w-44 group-hover:bg-blue-100">
                   {`${row.recipeNm}`}
 
                   {/* gap-1 によって間隔が作られてしまうため最後の<td>タグエリアを間借りする */}
-                  {row.contextMenuVisible &&
+                  {index === contextMenuIndex &&
                     <ContextMenu menuList={[
                       {textContent: "編集", onClick: () => openEditMenuPlanDetForm(row)},
                       {textContent: "削除", onClick: () => submitDeleteMenuPlanDet(row)},

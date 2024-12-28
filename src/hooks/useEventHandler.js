@@ -16,7 +16,6 @@ export const useEventHandler = (listen, callback) => {
 //     window.addEventListener('click', callback);
 //     return () => {
 //       window.removeEventListener('click', callback);
-//     };
 //   }, [callback]);
 // };
 

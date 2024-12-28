@@ -38,7 +38,6 @@ export const Buy = () => {
           ...item,
           num: index +1,
           isBought: false,
-          contextMenuVisible: false
         }))
       );
       setCompleteList(
@@ -48,7 +47,6 @@ export const Buy = () => {
           ...item,
           num: buyIngredList?.filter(buyIngredList => buyIngredList.boughtFlg === "F")?.length + index +1,
           isBought: true,
-          contextMenuVisible: false
         }))
       );
     };
@@ -80,20 +78,8 @@ export const Buy = () => {
     };
   }, [completeList, setCompleteList]);
 
-  // *********************************************
-  // ■ 画面クリック時のコンテキストメニュークローズ処理について ■
-  // 通常はuseCloseContextMenu(closeContextMenu, switchFlgXXXXAcc)で定義するが
-  // それに合わせてbuyIngredコンポーネント内でswitchFlgXXXXAccを定義して
-  // 未完行、完了済行にて再帰的に利用すると、完了済側のコンテキストメニューが閉じられない不具合が発生する。
-  // 原因不明だが、buyList内でそれぞれswitchFlgXXXXAccを定義し
-  // 例外的にコンテキストメニュークローズ用のイベントハンドラも独自に実装することで回避する。
-  // *********************************************
-  const handleCloseContext = () => {
-    closeContextMenu(switchFlgCompleteAcc);
-    closeContextMenu(switchFlgIncompleteAcc);
-  }
-  useEventHandler("click", handleCloseContext);
-  useEventHandler("scroll", handleCloseContext);
+  useEventHandler("click", closeContextMenu);
+  useEventHandler("scroll", closeContextMenu);
 
   // ☑ 押下時処理
   const submitSwitchCompletion = (row) => {

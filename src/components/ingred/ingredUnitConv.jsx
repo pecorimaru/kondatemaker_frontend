@@ -20,13 +20,18 @@ export const IngredUnitConv = ({ ingred }) => {
   const { 
     unitDict, 
     unitDictStat, 
-    handleContextMenu, 
     touchStart, 
     touchEnd, 
-    closeContextMenu, 
     showMessage, 
     clearMessage,
     setIsOpeningForm,
+    openContextMenu,
+    closeContextMenu,
+    contextMenuIndex,
+    hoveredIndex,
+    applyHovered,
+    setApplyHovered,
+    hoveredRowSetting,
   } = useKondateMaker();
   
   const { ingredUnitConvList, ingredUnitConvListStat, ingredUnitConvListMutate } = useIngredUnitConvList(
@@ -36,7 +41,9 @@ export const IngredUnitConv = ({ ingred }) => {
   const [isAddIngredUnitConv, setIsAddIngredUnitConv] = useState(false);
   const [isEditIngredUnitConv, setIsEditIngredUnitConv] = useState(false);
   const [editIngredUnitConvId, setEditIngredUnitConvId] = useState();
-  const [editData, setEditData] = useState();  
+  const [editData, setEditData] = useState(); 
+  // const [hoveredIndex, setHoveredIndex] = useState(null);
+  // const [applyHovered, setApplyHovered] = useState(false); 
 
   // データフェッチしたレシピ食材リストを表示用リストにセット
   // ・各画面で同一のキー[contextMenuVisible]を利用することでコンテキストメニューのオープン/クローズ処理を共通化
@@ -45,7 +52,6 @@ export const IngredUnitConv = ({ ingred }) => {
       setIngredUnitConvListDisp(
         ingredUnitConvList?.map((item) => ({
           ...item,
-          contextMenuVisible: false,
         }))
       );
     }
@@ -64,16 +70,36 @@ export const IngredUnitConv = ({ ingred }) => {
    }, [ingredUnitConvList, ingredUnitConvListDisp, setIngredUnitConvListDisp]);
 
   // 画面クリック or スクロールでコンテキストメニューをクローズ
-  useEventHandler("click", () => closeContextMenu(switchFlgIngredUnitConvAcc));
-  useEventHandler("scroll", () => closeContextMenu(switchFlgIngredUnitConvAcc));
+  useEventHandler("click", () => closeContextMenu());
+  useEventHandler("scroll", () => closeContextMenu());
+
+  // const handleTouchStart = (e, index) => {
+  //   if (index === hoveredIndex) {
+  //     setApplyHovered(!applyHovered);
+  //   } else {
+  //     setHoveredIndex(index);
+  //     setApplyHovered(true);
+  //   };
+  //   touchStart(e, index, switchFlgIngredUnitConvAcc);
+  // }
+
+  // const handleTouchEnd = (index) => {
+  //   if (ingredUnitConvListDisp[index]?.["contextMenuVisible"]) {setApplyHovered(true)};
+  //   touchEnd();
+  // };
+
+  // const handleMouseEnter = (index) => {
+  //   setApplyHovered(true);
+  //   setHoveredIndex(index);
+  // };
 
   const openAddIngredForm = () => {
-    closeContextMenu(switchFlgIngredUnitConvAcc);  // 親明細を持つ明細行のコンテキストは明示的にクローズしないとなぜか消えない
+    // closeContextMenu(switchFlgIngredUnitConvAcc);  // 親明細を持つ明細行のコンテキストは明示的にクローズしないとなぜか消えない
     setIsAddIngredUnitConv(true);
   };
 
   const openEditIngredForm = (row) => {
-    closeContextMenu(switchFlgIngredUnitConvAcc);  // 親明細を持つ明細行明細のコンテキストは明示的にクローズしないとなぜか消えない
+    // closeContextMenu(switchFlgIngredUnitConvAcc);  // 親明細を持つ明細行明細のコンテキストは明示的にクローズしないとなぜか消えない
     setEditIngredUnitConvId(row?.ingredUnitConvId);
     setEditData({ convUnitCd: row?.convUnitCd, convRate: row?.convRate, convWeight: row?.convWeight });
     setIsEditIngredUnitConv(true);
@@ -97,10 +123,10 @@ export const IngredUnitConv = ({ ingred }) => {
       const data = await response.data;
       console.log(data.message, data);
       ingredUnitConvListMutate([...ingredUnitConvList, data.newIngredUnitConv]);
+      closeIngredUnitConvForm();
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
-    }
-    setIsAddIngredUnitConv(false);
+    };
   };
 
   const submitEditIngredUnitConv = async (formData) => {
@@ -118,10 +144,9 @@ export const IngredUnitConv = ({ ingred }) => {
       ingredUnitConvListMutate(ingredUnitConvList.map((item) => (
         item?.ingredUnitConvId === editIngredUnitConvId ? data.newIngredUnitConv : item
       )));
+      closeIngredUnitConvForm();
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
-    } finally {   
-      setIsEditIngredUnitConv(false);
     };
   };
 
@@ -139,8 +164,6 @@ export const IngredUnitConv = ({ ingred }) => {
       ingredUnitConvListMutate(ingredUnitConvList.filter((item) => item.ingredUnitConvId !== row.ingredUnitConvId));
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
-    } finally {
-      closeContextMenu(switchFlgIngredUnitConvAcc);
     };
   };
 
@@ -169,22 +192,24 @@ export const IngredUnitConv = ({ ingred }) => {
             {ingredUnitConvListDisp?.map((row, index) => 
               <tr 
                 key={row.ingredUnitConvId} 
-                onContextMenu={(event) => handleContextMenu(event, index, switchFlgIngredUnitConvAcc)}
-                onTouchStart={(event) => touchStart(event, index, switchFlgIngredUnitConvAcc)} 
-                onTouchEnd={touchEnd} 
-                className="detail-table-row"
+                onContextMenu={(e) => openContextMenu(e, index)}
+                onTouchStart={(e) => touchStart(e, index)} 
+                onTouchEnd={() => touchEnd(index)} 
+                onMouseEnter={() => hoveredRowSetting(index)}
+                onMouseLeave={() => setApplyHovered(false)}
+                className={`detail-table-row ${(applyHovered && index === hoveredIndex) && "group"}`}
               >
-                <td className="detail-table-data bg-white w-20">
+                <td className="detail-table-data bg-white w-20 group-hover:bg-blue-100">
                   {!unitDictStat.isLoading ? `${ingred.unitConvWeight} ${unitDict[ingred.buyUnitCd]}` : <LoadingSpinner /> }
                 </td>
-                <td className="detail-table-data bg-white w-12">
+                <td className="detail-table-data bg-white w-12 group-hover:bg-blue-100">
                 ＝
                 </td>
-                <td className="detail-table-data bg-white w-20">
+                <td className="detail-table-data bg-white w-20 group-hover:bg-blue-100">
                   {!unitDictStat.isLoading ? `${Math.round((row.convRate * ingred.unitConvWeight) * 100) / 100} ${unitDict[row.convUnitCd]}` : <LoadingSpinner /> }
 
                   {/* gap-1 によって間隔が作られてしまうため最後の<td>タグエリアを間借りする */}
-                  {row.contextMenuVisible && 
+                  {index === contextMenuIndex && 
                     <ContextMenu menuList={[
                       {textContent: "編集", onClick: () => openEditIngredForm(row)},
                       {textContent: "削除", onClick: () => submitDeleteIngredUnitConv(row, index)}

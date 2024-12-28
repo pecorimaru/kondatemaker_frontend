@@ -21,7 +21,15 @@ function getEditingToweekMenuPlanDet(toweekMenuPlanDetListDisp) {
 
 export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, toweekMenuPlanDetListDictMutate, isRefreshing }) => {
 
-  const { handleContextMenu, touchStart, touchEnd, closeContextMenu, showMessage, clearMessage } = useKondateMaker();
+  const { 
+    openContextMenu, 
+    closeContextMenu, 
+    touchStart, 
+    touchEnd, 
+    showMessage, 
+    clearMessage,
+    contextMenuIndex,
+  } = useKondateMaker();
   const [toweekMenuPlanDetListDisp, setToweekMenuPlanDetListDisp] = useState();
 
   const [befRecipeNm, setBefRecipeNm] = useState("");            // 更新チェック用（編集によって値が変わった場合のみ、データ更新）
@@ -33,13 +41,12 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
 
   
   // 献立プラン明細リストを表示用リストにセット
-  // ・各画面で同一のキー[contextMenuVisible]を利用することでコンテキストメニューのオープン/クローズ処理を共通化
   useEffect(() => {
+    console.log("toweekMenuPlanDetListDictDisp", toweekMenuPlanDetListDictDisp);
     if(toweekMenuPlanDetListDictDisp) {
       setToweekMenuPlanDetListDisp(
         toweekMenuPlanDetListDictDisp[weekdayCd]?.map((item) => ({
           ...item,
-          contextMenuVisible: false,
           isEditing: false,
           isAlert: false,
         }))
@@ -65,8 +72,8 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
   }, [toweekMenuPlanDetListDictDisp, toweekMenuPlanDetListDisp, setToweekMenuPlanDetListDisp]);
   
   // 画面クリック or スクロールでコンテキストメニューをクローズ
-  useEventHandler("click", () => closeContextMenu(switchFlgToweekMenuPlanAcc));
-  useEventHandler("scroll", () => closeContextMenu(switchFlgToweekMenuPlanAcc));
+  useEventHandler("click", () => closeContextMenu());
+  useEventHandler("scroll", () => closeContextMenu());
   
   // 編集時に対象項目にフォーカス
   useEffect(() => {if (isEditing && recipeNmRef.current) {recipeNmRef.current.focus()}}, [isEditing]);
@@ -181,7 +188,7 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
       });
       const data = await response.data;
       console.log(data.message, data);
-      toweekMenuPlanDetListDictMutate();
+      toweekMenuPlanDetListDictMutate(data.toweekMenuPlanDetListDict);
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };
@@ -206,6 +213,7 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
       });
       const data = await response.data;
       console.log(data.message, data);
+      toweekMenuPlanDetListDictMutate(data.toweekMenuPlanDetListDict);
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };
@@ -228,7 +236,6 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     }        
-    closeContextMenu(switchFlgToweekMenuPlanAcc);
     setRecipeNmEditing("");
   };
 
@@ -276,8 +283,8 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
             <div 
               key={index} 
               className={`bg-white ${index > 0 && "mt-1.5"}`}  // １つの曜日に複数のレシピがある場合のみ、mt-1.5を指定
-              onContextMenu={(e) => handleContextMenu(e, index, switchFlgToweekMenuPlanAcc)}
-              onTouchStart={(e) => touchStart(e, index, switchFlgToweekMenuPlanAcc)} 
+              onContextMenu={(e) => openContextMenu(e, row?.toweekMenuPlanDetId)}
+              onTouchStart={(e) => touchStart(e, row?.toweekMenuPlanDetId)} 
               onTouchEnd={touchEnd} 
             >
               {row?.isEditing ?
@@ -312,7 +319,7 @@ export const ToweekMenuPlanDet = ({ weekdayCd, toweekMenuPlanDetListDictDisp, to
                   {row?.recipeNm ? row?.recipeNm : "未定"}
                 </div>
               }
-              {row?.contextMenuVisible && <ContextMenu menuList={[
+              {row?.toweekMenuPlanDetId === contextMenuIndex && <ContextMenu menuList={[
                 { textContent: "編集", onClick: () => handleEditClick(row, index) },
                 { textContent: "削除", onClick: () => submitDeleteToweekMenuPlanDet(row) },
               ]} />}

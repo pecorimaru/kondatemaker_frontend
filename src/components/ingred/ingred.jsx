@@ -24,13 +24,18 @@ export const Ingred = () => {
     unitDictStat, 
     salesAreaDict, 
     salesAreaDictStat, 
-    handleContextMenu, 
     touchStart, 
     touchEnd, 
-    closeContextMenu, 
     showMessage, 
     clearMessage,
     setIsOpeningForm,
+    openContextMenu,
+    closeContextMenu,
+    contextMenuIndex,
+    hoveredIndex,
+    applyHovered,
+    setApplyHovered,
+    hoveredRowSetting,
   } = useKondateMaker();
   const { ingredList, ingredListStat, ingredListMutate } = useIngredList();
   
@@ -39,18 +44,17 @@ export const Ingred = () => {
   const [isEditIngred, setIsEditIngred] = useState(false);
   const [editIngredId, setEditIngredId] = useState();
   const [editData, setEditData] = useState({ ingredNm: null, ingredNmK: null, parentIngredNm: null, buyUnitCd: null, salesAreaType: null });
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [applyHovered, setApplyHovered] = useState(false);
+  // const [hoveredIndex, setHoveredIndex] = useState(null);
+  // const [applyHovered, setApplyHovered] = useState(false);
 
   // データフェッチしたレシピリストを表示用リストにセット
-  // ・各画面で同一のキー[contextMenuVisible]を利用することでコンテキストメニューのオープン/クローズ処理を共通化
+
   useEffect(() => {
     if (!ingredListStat.isLoading) {
       setIngredListDisp(
         ingredList
         ?.map((item) => ({
           ...item,
-          contextMenuVisible: false,
           ingredUnitConvVisible: null,
         }))
       )
@@ -71,28 +75,28 @@ export const Ingred = () => {
   }, [ingredList, ingredListDisp, setIngredListDisp]);
 
   // 画面クリック or スクロールでコンテキストメニューをクローズ
-  useEventHandler("click", () => closeContextMenu(switchFlgIngredAcc));
-  useEventHandler("scroll", () => closeContextMenu(switchFlgIngredAcc));
+  useEventHandler("click", () => closeContextMenu());
+  useEventHandler("scroll", () => closeContextMenu());
 
-  const handleTouchStart = (e, index) => {
-    if (index === hoveredIndex) {
-      setApplyHovered(!applyHovered);
-    } else {
-      setHoveredIndex(index);
-      setApplyHovered(true);
-    };
-    touchStart(e, index, switchFlgIngredAcc);
-  }
+  // const handleTouchStart = (e, index) => {
+  //   if (index === hoveredIndex) {
+  //     setApplyHovered(!applyHovered);
+  //   } else {
+  //     setHoveredIndex(index);
+  //     setApplyHovered(true);
+  //   };
+  //   touchStart(e, index, switchFlgIngredAcc);
+  // }
 
-  const handleTouchEnd = (index) => {
-    if (ingredListDisp[index]?.["contextMenuVisible"]) {setApplyHovered(true)};
-    touchEnd();
-  };
+  // const handleTouchEnd = (index) => {
+  //   if (ingredListDisp[index]?.["contextMenuVisible"]) {setApplyHovered(true)};
+  //   touchEnd();
+  // };
 
-  const handleMouseEnter = (index) => {
-    setApplyHovered(true);
-    setHoveredIndex(index);
-  };
+  // const handleMouseEnter = (index) => {
+  //   setApplyHovered(true);
+  //   setHoveredIndex(index);
+  // };
 
   const openAddIngredForm = () => {
     setIsAddIngred(true);
@@ -177,7 +181,6 @@ export const Ingred = () => {
       const data = await response.data;
       console.log(data.message, data);
       ingredListMutate(ingredList?.filter((item) => (item.ingredId !== row?.ingredId)));
-      closeContextMenu(switchFlgIngredAcc);
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };
@@ -202,10 +205,10 @@ export const Ingred = () => {
                 // レイアウトが崩れるため、<tbody>で返却する
                 <tbody key={row?.ingredId}>
                   <tr  
-                    onContextMenu={(e) => handleContextMenu(e, index, switchFlgIngredAcc)}
-                    onTouchStart={(e) => handleTouchStart(e, index)} 
-                    onTouchEnd={() => handleTouchEnd(index)} 
-                    onMouseEnter={() => handleMouseEnter(index)}
+                    onContextMenu={(e) => openContextMenu(e, index)}
+                    onTouchStart={(e) => touchStart(e, index)} 
+                    onTouchEnd={() => touchEnd(index)} 
+                    onMouseEnter={() => hoveredRowSetting(index)}
                     onMouseLeave={() => setApplyHovered(false)}
                     className={`detail-table-row ${(applyHovered && index === hoveredIndex) && "group"}`}
                   >
@@ -213,10 +216,10 @@ export const Ingred = () => {
                       {row?.ingredNm}
                       {/* 個別にtdタグで配置すると[detail-table-row]定義した[gap-1]によって余分な間隔が発生するため
                           onClickイベントが無いtdタグに混在させることで回避。 */}
-                      {row?.contextMenuVisible && 
+                      {index === contextMenuIndex && 
                         <ContextMenu menuList={[
                           {textContent: "編集", onClick: () => openEditIngredForm(row, index)},
-                          {textContent: "削除", onClick: () => submitDeleteIngred(row, index)},
+                          {textContent: "削除", onClick: () => submitDeleteIngred(row)},
                         ]} />
                       }
                     </td>

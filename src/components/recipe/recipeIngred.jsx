@@ -20,61 +20,83 @@ export const RecipeIngred = ({ recipe }) => {
   const { 
     unitDict, 
     unitDictStat, 
-    handleContextMenu, 
     touchStart, 
     touchEnd, 
-    closeContextMenu, 
     showMessage, 
     clearMessage,
     setIsOpeningForm,
+    openContextMenu,
+    closeContextMenu,
+    contextMenuIndex,
+    hoveredIndex,
+    applyHovered,
+    setApplyHovered,
+    hoveredRowSetting,
   } = useKondateMaker();
 
   const { recipeIngredList, recipeIngredListStat, recipeIngredListMutate } = useRecipeIngredList(
     recipe.recipeIngredVisible !== null ? recipe?.recipeId : null
   );
-  const [recipeIngredListDisp, setRecipeIngredListDisp] = useState();
+  // const [recipeIngredListDisp, setRecipeIngredListDisp] = useState();
   const [isAddIngred, setIsAddIngred] = useState(false);
   const [isEditIngred, setIsEditIngred] = useState(false);
   const [editRecipeIngredId, setEditRecipeIngredId] = useState();
   const [editData, setEditData] = useState();
 
-  // データフェッチしたレシピ食材リストを表示用リストにセット
-  // ・各画面で同一のキー[contextMenuVisible]を利用することでコンテキストメニューのオープン/クローズ処理を共通化
-  useEffect(() => {
-    if (!recipeIngredListStat.isLoading) {
-      setRecipeIngredListDisp(
-        recipeIngredList?.map((item) => ({
-          ...item,
-          contextMenuVisible: false,
-        }))
-      );
-    }
-  }, [recipeIngredList, recipeIngredListStat.isLoading]);
+  // // データフェッチしたレシピ食材リストを表示用リストにセット
+  // useEffect(() => {
+  //   if (!recipeIngredListStat.isLoading) {
+  //     setRecipeIngredListDisp(
+  //       recipeIngredList?.map((item) => ({
+  //         ...item,
+  //       }))
+  //     );
+  //   }
+  // }, [recipeIngredList, recipeIngredListStat.isLoading]);
   
-   // 表示用リストで定義したフラグのスイッチング処理
-   const switchFlgRecipeIngredAcc = useCallback((updIndex, key, flg, isAll=false) => {
-    //  console.log(`updIndex:${updIndex} key:${key} flg:${flg} isAll:${isAll}`);
-     if (recipeIngredList && recipeIngredListDisp) {
-      setRecipeIngredListDisp(
-        recipeIngredListDisp?.map((item, index) => ({
-           ...item,
-           [key]: isAll || index === updIndex ? flg : recipeIngredListDisp[index]?.[key],
-         }))
-       );    
-     };
-   }, [recipeIngredList, recipeIngredListDisp, setRecipeIngredListDisp]);
+  //  // 表示用リストで定義したフラグのスイッチング処理
+  //  const switchFlgRecipeIngredAcc = useCallback((updIndex, key, flg, isAll=false) => {
+  //   //  console.log(`updIndex:${updIndex} key:${key} flg:${flg} isAll:${isAll}`);
+  //    if (recipeIngredList && recipeIngredListDisp) {
+  //     setRecipeIngredListDisp(
+  //       recipeIngredListDisp?.map((item, index) => ({
+  //          ...item,
+  //          [key]: isAll || index === updIndex ? flg : recipeIngredListDisp[index]?.[key],
+  //        }))
+  //      );    
+  //    };
+  //  }, [recipeIngredList, recipeIngredListDisp, setRecipeIngredListDisp]);
 
   // 画面クリック or スクロールでコンテキストメニューをクローズ
-  useEventHandler("click", () => closeContextMenu(switchFlgRecipeIngredAcc));
-  useEventHandler("scroll", () => closeContextMenu(switchFlgRecipeIngredAcc));
+  useEventHandler("click", () => closeContextMenu());
+  useEventHandler("scroll", () => closeContextMenu());
+
+  //  const handleTouchStart = (e, index) => {
+  //   if (index === hoveredIndex) {
+  //     setApplyHovered(!applyHovered);
+  //   } else {
+  //     setHoveredIndex(index);
+  //     setApplyHovered(true);
+  //   };
+  //   touchStart(e, index, switchFlgRecipeIngredAcc);
+  //  }
+
+  //  const handleTouchEnd = (index) => {
+  //   if (recipeIngredListDisp[index]?.["contextMenuVisible"]) {setApplyHovered(true)};
+  //   touchEnd();
+  // };
+
+  // const handleMouseEnter = (index) => {
+  //   setHoveredIndex(index);
+  //   setApplyHovered(true);
+  // }
 
   const openAddIngredForm = () => {
-    closeContextMenu(switchFlgRecipeIngredAcc);  // 親明細を持つ明細行のコンテキストは明示的にクローズしないとなぜか消えない
     setIsAddIngred(true);
   };
 
   const openEditIngredForm = (row) => {
-    closeContextMenu(switchFlgRecipeIngredAcc);  // 親明細を持つ明細行明細のコンテキストは明示的にクローズしないとなぜか消えない
+    setApplyHovered(false);
     setEditRecipeIngredId(row?.recipeIngredId);
     setEditData({ ingredNm: row?.ingredNm, qty: row?.qty, unitCd: row?.unitCd, salesAreaType: row?.salesAreaType });
     setIsEditIngred(true);
@@ -86,7 +108,7 @@ export const RecipeIngred = ({ recipe }) => {
     setIsOpeningForm(false);
   };
 
-  const submitAddRecipeIngred = async (formData) => {
+  const submitAddRecipeIngred = async (formData, clearForm) => {
     clearMessage();
     console.log(`レシピ食材追加 レシピID:${recipe?.recipeId} 食材名:${formData?.ingredNm} 必要量:${formData?.qty} 単位コード:${formData?.unitCd} 売り場区分${formData?.salesAreaType}`);
     try {
@@ -97,9 +119,11 @@ export const RecipeIngred = ({ recipe }) => {
         unitCd: formData?.unitCd, 
       });
       const data = await response.data;
-        console.log(data.message, data);
-        recipeIngredListMutate([...recipeIngredList, data.newRecipeIngred]);
-        setIsAddIngred(false);
+      console.log(data.message, data);
+      recipeIngredListMutate([...recipeIngredList, data.newRecipeIngred]);
+      clearForm();
+      
+      if (!formData?.isRegisterContinue) {closeIngredForm()};
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };
@@ -120,7 +144,7 @@ export const RecipeIngred = ({ recipe }) => {
       recipeIngredListMutate(recipeIngredList.map((item) => (
         item?.recipeIngredId === editRecipeIngredId ? data.newRecipeIngred : item
       )));
-      setIsEditIngred (false);
+      closeIngredForm();
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };        
@@ -137,11 +161,10 @@ export const RecipeIngred = ({ recipe }) => {
       const response = await apiClient.delete(`${Const.ROOT_URL}/recipe/submitDeleteRecipeIngred/query_params?${queryParams}`);
       const data = await response.data;
       console.log(data.message, data);
-      recipeIngredListMutate(recipeIngredList.filter((item) => item.recipeIngredId !== row.recipeIngredId));
+      recipeIngredListMutate(recipeIngredList.filter((item) => item.recipeIngredId !== row.recipeIngredId), false);
     } catch (error) {
       showMessage(error?.response?.data?.detail || error?._messageTimeout || Const.MSG_MISSING_REQUEST, Const.MESSAGE_TYPE.ERROR);
     };
-    closeContextMenu(switchFlgRecipeIngredAcc);
   };
 
 
@@ -167,22 +190,24 @@ export const RecipeIngred = ({ recipe }) => {
               transition: 'height 0.3s ease',
             }}
           >
-            {recipeIngredListDisp?.map((row, index) => 
+            {recipeIngredList?.map((row, index) => 
               <tr 
                 key={row.recipeIngredId} 
-                onContextMenu={(event) => handleContextMenu(event, index, switchFlgRecipeIngredAcc)}
-                onTouchStart={(event) => touchStart(event, index, switchFlgRecipeIngredAcc)} 
-                onTouchEnd={touchEnd} 
-                className="detail-table-row"
+                onContextMenu={(e) => openContextMenu(e, index)}
+                onTouchStart={(e) => touchStart(e, index)} 
+                onTouchEnd={() => touchEnd()} 
+                onMouseEnter={() => hoveredRowSetting(index)}
+                onMouseLeave={() => setApplyHovered(false)}
+                className={`detail-table-row ${(applyHovered && index === hoveredIndex) && "group"}`}
               >
-                <td className="detail-table-data bg-white w-36">
+                <td className="detail-table-data bg-white w-36 group-hover:bg-blue-100">
                   {row.ingredNm}
                 </td>
-                <td className="detail-table-data bg-white w-16">
+                <td className="detail-table-data bg-white w-16 group-hover:bg-blue-100">
                   {!unitDictStat.isLoading ? `${row.qty} ${unitDict[row.unitCd]}` : <LoadingSpinner />}
 
                   {/* gap-1 によって間隔が作られてしまうため最後の<td>タグエリアを間借りする */}
-                  {row.contextMenuVisible && 
+                  {index === contextMenuIndex && 
                     <ContextMenu menuList={[
                       {textContent: "編集", onClick: () => openEditIngredForm(row)},
                       {textContent: "削除", onClick: () => submitDeleteRecipeIngred(row, index)}

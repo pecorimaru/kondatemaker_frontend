@@ -45,7 +45,6 @@ export const RecipeForm = ({ submitAction, closeRecipeForm, editData }) => {
               value={recipeNmK}
               onChange={(e) => setRecipeNmK(e.target.value)}
               className="form-input-base"
-              required
             />
           </div>
 

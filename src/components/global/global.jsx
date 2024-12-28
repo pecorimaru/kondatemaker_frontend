@@ -1,7 +1,7 @@
 import '../../css/styles.css';
 import '../../css/output.css';
 import { useWeekdayDict, useUnitDict, useSalesAreaDict, useRecipeTypeDict, useCurrentGroup, useLoginUser } from '../../hooks/useFetchData.js';
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 import { Header } from './header.jsx';
 
 
@@ -10,8 +10,8 @@ const KondateMakerContext = createContext();
 export function KondateMakerProvider({ children }) {
 
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("isLoggedIn") || null);
-  const { loginUser, loginUserStat, loginUserMutate } = useLoginUser(localStorage.getItem("isLoggedIn") || null);
-  const { currentGroup, currentGroupStat, currentGroupMutate } = useCurrentGroup(localStorage.getItem("isLoggedIn") || null);
+  const { loginUser, loginUserStat, loginUserMutate } = useLoginUser(isLoggedIn || null);
+  const { currentGroup, currentGroupStat, currentGroupMutate } = useCurrentGroup(isLoggedIn || null);
   const { weekdayDict, weekdayDictStat } = useWeekdayDict();
   const { unitDict, unitDictStat } = useUnitDict();
   const { recipeTypeDict, recipeTypeDictStat } = useRecipeTypeDict();
@@ -22,27 +22,32 @@ export function KondateMakerProvider({ children }) {
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [touchTimeout, setTouchTimeout] = useState(null);
   const [isOpeningForm, setIsOpeningForm] = useState(false);
-
-  // 右クリックでコンテキストメニュー
-  const handleContextMenu = (event, updIndex, switchVisibleAcc) => {
-    event.preventDefault();
-    switchVisibleAcc(updIndex, "contextMenuVisible", true)
-    setMenuPosition({ x: event.clientX, y: event.clientY -50 });
-  };
+  const [contextMenuIndex, setContextMenuIndex] = useState(null);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [applyHovered, setApplyHovered] = useState(false);
 
   // タッチ開始（長押し用）
-   const touchStart = (e, index, showContextMenu) => {
+   const touchStart = (e, index) => {
+
+    if (index === hoveredIndex) {
+      setApplyHovered(!applyHovered);
+    } else {
+      setHoveredIndex(index);
+      setApplyHovered(true);
+    };
+
     const touch = e.touches[0];
     setTouchTimeout(setTimeout(() => {
-      // setMenuPosition({ x: 313, y: 315 });
       const x = window.innerWidth - touch.clientX < 82 ? window.innerWidth -62 : touch.clientX +20 ;
       setMenuPosition({ x: x, y: touch.clientY -70 });
-      showContextMenu(index, "contextMenuVisible", true);
+      // showContextMenu(index, "contextMenuVisible", true);
+      setContextMenuIndex(index);
     }, 500));  // 500ms 長押しでポップアップを表示
   };
 
   // タッチ終了（長押しキャンセル）
-  const touchEnd = () => {
+  const touchEnd = (index) => {
+    if (index === contextMenuIndex) {setApplyHovered(true)};
     clearTimeout(touchTimeout);
     window.addEventListener('touchend', touchEnd);
     return () => {
@@ -50,9 +55,22 @@ export function KondateMakerProvider({ children }) {
     };
   };
 
-  const closeContextMenu = (switchVisibleAcc) => {
-    switchVisibleAcc(null, "contextMenuVisible", false, true);
-  }
+  // 右クリックでコンテキストメニュー
+  const openContextMenu = (e, index) => {
+    e.preventDefault();
+    // switchVisibleAcc(updIndex, "contextMenuVisible", true)
+    setContextMenuIndex(index);
+    setMenuPosition({ x: e.clientX, y: e.clientY -50 });
+  };
+  
+  const closeContextMenu = () => {
+    setContextMenuIndex(null);
+  };
+
+  const hoveredRowSetting = (index) => {
+    setHoveredIndex(index);
+    setApplyHovered(true);
+  };
 
   const showMessage = (content, type) => {
     setMessageContent(content);
@@ -97,12 +115,19 @@ export function KondateMakerProvider({ children }) {
         setIsOpeningForm,
         touchTimeout,
         setTouchTimeout,
-        handleContextMenu,
+        contextMenuIndex,
+        setContextMenuIndex,
+        hoveredIndex,
+        setHoveredIndex,
+        applyHovered,
+        setApplyHovered,
         touchStart,
         touchEnd,
+        openContextMenu,
         closeContextMenu,
         showMessage,
-        clearMessage
+        clearMessage,
+        hoveredRowSetting,
       }}>
       {children}
     </KondateMakerContext.Provider>
