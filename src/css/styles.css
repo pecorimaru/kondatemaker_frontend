@@ -14,7 +14,7 @@ td {
   @apply flex text-sm text-white gap-1 select-none;
 }
 
-.header-talbe-data {
+.header-table-data {
   @apply bg-blue-900 font-bold py-2 shadow-lg rounded-sm;
 }
 
@@ -23,20 +23,15 @@ td {
 }
 
 .detail-table-data {
-  @apply flex justify-center items-center px-1.5 py-2.5 shadow-lg rounded-sm duration-500;
+  @apply flex justify-center items-center h-10 px-1.5 py-2.5 shadow-lg rounded-sm duration-500;
 }
 
-/* 「>」指定により、.detail-table-row の直下に配置された .detail-table-data にのみ適用  */
-/* .detail-table-row:hover > .detail-table-data {
-  @apply bg-blue-100;
-} */
-
 .form-bg-layout-base {
-  @apply fixed inset-0 flex justify-center bg-black bg-opacity-50 items-center z-10;
+  @apply fixed flex justify-center bg-black bg-opacity-50 items-center z-20 inset-0;
 }
 
 .form-input-base {
-  @apply w-full px-3 py-2 h-10 border rounded-sm text-base;
+  @apply px-3 py-2 h-10 border rounded-sm text-base;
 }
 
 .weekday-recipe-data-base {
