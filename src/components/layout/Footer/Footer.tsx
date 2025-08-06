@@ -13,7 +13,7 @@ export const Footer = () => {
   return(
     <div 
       className={`
-        fixed w-full flex justify-center border-t-slate-300 border-t bg-blue-200 h-20 bottom-0
+        fixed w-full flex justify-center border-t-slate-300 border-t bg-blue-200 h-20 bottom-0 z-10
         ${isLoggedIn ? "animate-footerSlideIn" : "animate-footerSlideOut"}
       `}
     >

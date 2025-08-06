@@ -553,6 +553,10 @@ video {
   visibility: visible;
 }
 
+.static {
+  position: static;
+}
+
 .fixed {
   position: fixed;
 }
@@ -569,6 +573,10 @@ video {
   inset: 0px;
 }
 
+.-top-5 {
+  top: -1.25rem;
+}
+
 .bottom-0 {
   bottom: 0px;
 }
@@ -579,6 +587,10 @@ video {
 
 .bottom-28 {
   bottom: 7rem;
+}
+
+.left-1\/2 {
+  left: 50%;
 }
 
 .right-0 {
@@ -605,12 +617,12 @@ video {
   z-index: 20;
 }
 
-.z-50 {
-  z-index: 50;
-}
-
 .z-30 {
   z-index: 30;
+}
+
+.z-50 {
+  z-index: 50;
 }
 
 .mx-0\.5 {
